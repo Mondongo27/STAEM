@@ -1,4 +1,3 @@
-
-public class Main {
+public abstract class gay {
 
 }
