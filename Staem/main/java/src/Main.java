@@ -1,3 +1,3 @@
-public class ABeeeERREA {
+public class Main {
 
 }
