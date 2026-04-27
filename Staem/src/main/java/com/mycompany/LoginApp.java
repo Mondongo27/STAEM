@@ -25,20 +25,19 @@ public class LoginApp extends Application {
         txtPass.setPromptText("contraseña");
 
         Button btnLogin = new Button("Entrar");
-        btnLogin.setMaxWidth(Double.MAX_VALUE); // Botón ancho
+        btnLogin.setMaxWidth(Double.MAX_VALUE);
+
+        Button btnRegistro = new Button("Crear cuenta nueva");
+        btnRegistro.setMaxWidth(Double.MAX_VALUE);
 
         Label lblMensaje = new Label();
 
-        // Acción del botón conectada a tu clase AuthService
+        // Acción del botón Login
         btnLogin.setOnAction(e -> {
             int id = auth.login(txtUser.getText(), txtPass.getText());
             if (id != -1) {
                 lblMensaje.setText("¡Bienvenido!");
-
-                // Cerramos la ventana de Login
                 stage.close();
-
-                // Abrimos la ventana de la Biblioteca
                 BibliotecaView biblioteca = new BibliotecaView();
                 biblioteca.start(id);
             } else {
@@ -47,16 +46,73 @@ public class LoginApp extends Application {
             }
         });
 
-        // Diseño del contenedor
+        btnRegistro.setOnAction(e -> {
+            mostrarVentanaRegistro();
+        });
+
         VBox layout = new VBox(15);
         layout.setPadding(new Insets(30));
         layout.setAlignment(Pos.CENTER);
-        layout.getChildren().addAll(titulo, txtUser, txtPass, btnLogin, lblMensaje);
+        layout.getChildren().addAll(titulo, txtUser, txtPass, btnLogin, btnRegistro, lblMensaje);
 
         Scene scene = new Scene(layout, 350, 400);
         stage.setTitle("Staem Manager v1.0");
         stage.setScene(scene);
         stage.show();
+    }
+
+    private void mostrarVentanaRegistro() {
+        Stage regStage = new Stage();
+        VBox root = new VBox(15);
+        root.setPadding(new Insets(20));
+        root.setAlignment(Pos.CENTER);
+
+        Label regTitulo = new Label("REGISTRO DE USUARIO");
+        regTitulo.setStyle("-fx-font-weight: bold;");
+
+        TextField nuevoUser = new TextField();
+        nuevoUser.setPromptText("Nombre de usuario");
+
+        // NUEVO: Campo de Email
+        TextField nuevoEmail = new TextField();
+        nuevoEmail.setPromptText("Correo electrónico");
+
+        PasswordField nuevaPass = new PasswordField();
+        nuevaPass.setPromptText("Contraseña");
+
+        Button btnCrear = new Button("Registrar ahora");
+        btnCrear.setMaxWidth(Double.MAX_VALUE);
+
+        btnCrear.setOnAction(ev -> {
+            AuthService auth = new AuthService();
+            // Validamos que los campos no estén vacíos
+            if (nuevoUser.getText().isEmpty() || nuevoEmail.getText().isEmpty() || nuevaPass.getText().isEmpty()) {
+                Alert alerta = new Alert(Alert.AlertType.WARNING);
+                alerta.setContentText("Por favor, rellena todos los campos.");
+                alerta.show();
+                return;
+            }
+
+            // Enviamos los 3 parámetros al método actualizado de AuthService
+            if(auth.registrarUsuario(nuevoUser.getText(), nuevaPass.getText(), nuevoEmail.getText())) {
+                Alert alerta = new Alert(Alert.AlertType.INFORMATION);
+                alerta.setTitle("Registro");
+                alerta.setHeaderText(null);
+                alerta.setContentText("¡Cuenta creada con éxito! Ya puedes iniciar sesión.");
+                alerta.show();
+                regStage.close();
+            } else {
+                Alert alerta = new Alert(Alert.AlertType.ERROR);
+                alerta.setContentText("No se pudo crear la cuenta. El usuario o el email podrían estar duplicados.");
+                alerta.show();
+            }
+        });
+
+        // Añadimos el nuevo campo al diseño
+        root.getChildren().addAll(regTitulo, nuevoUser, nuevoEmail, nuevaPass, btnCrear);
+        regStage.setScene(new Scene(root, 300, 320)); // Aumentamos un poco el alto para que quepa el email
+        regStage.setTitle("Staem - Nuevo Registro");
+        regStage.show();
     }
 
     public static void main(String[] args) {

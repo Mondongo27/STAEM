@@ -8,19 +8,15 @@ import java.sql.SQLException;
 public class AuthService {
 
     // método para registrar un usuario nuevo
-    public boolean registrarUsuario(String nombre, String clave) {
-        String consulta = "insert into usuarios (username, password) values (?, ?)";
-
+    public boolean registrarUsuario(String user, String pass, String email) {
+        String sql = "insert into usuarios (username, password, email) values (?, ?, ?)";
         try (Connection conn = ConexionDB.conectar();
-             PreparedStatement stmt = conn.prepareStatement(consulta)) {
-
-            stmt.setString(1, nombre);
-            stmt.setString(2, clave);
-
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, user);
+            stmt.setString(2, pass);
+            stmt.setString(3, email);
             return stmt.executeUpdate() > 0;
-
         } catch (SQLException e) {
-            System.out.println("error al registrar: " + e.getMessage());
             return false;
         }
     }

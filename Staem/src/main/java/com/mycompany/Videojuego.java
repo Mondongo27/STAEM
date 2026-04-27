@@ -21,4 +21,8 @@ public class Videojuego {
     public String getEstado() { return estado; }
     public int getValoracion() { return valoracion; }
     public String getResena() { return resena; }
+
+    public int getId() {
+        return id;
+    }
 }
