@@ -2,14 +2,12 @@ package com.mycompany;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import java.sql.*;
 
@@ -18,217 +16,196 @@ public class BibliotecaView {
     public void start(int usuarioId) {
         Stage stage = new Stage();
         BibliotecaService service = new BibliotecaService();
-
         VBox layoutPrincipal = new VBox(10);
         layoutPrincipal.setPadding(new Insets(15));
 
-        // --- BUSCADOR DE COMUNIDAD (ESTILO MYANIMELIST) ---
+        // --- 1. CABECERA (Buscador, Perfil y Logout) ---
         HBox buscadorComunidad = new HBox(10);
-        buscadorComunidad.setPadding(new Insets(0, 0, 10, 0));
         TextField txtBusquedaUser = new TextField();
-        txtBusquedaUser.setPromptText("Buscar lista de usuario...");
+        txtBusquedaUser.setPromptText("Buscar usuario...");
+
         Button btnVisitar = new Button("Ver Perfil Público");
-        btnVisitar.setStyle("-fx-background-color: #2F52A2; -fx-text-fill: white;"); // Azul MAL
+        btnVisitar.setStyle("-fx-background-color: #2F52A2; -fx-text-fill: white;");
 
-        btnVisitar.setOnAction(e -> {
-            String target = txtBusquedaUser.getText();
-            if(!target.isEmpty()) {
-                PublicProfileView perfilPublico = new PublicProfileView();
-                perfilPublico.start(target);
+        Button btnMiPerfil = new Button("Mi Perfil");
+        btnMiPerfil.setStyle("-fx-background-color: #03A9F4; -fx-text-fill: white;");
+
+        Button btnLogOut = new Button("Cerrar Sesión");
+        btnLogOut.setStyle("-fx-background-color: #607D8B; -fx-text-fill: white;");
+
+        buscadorComunidad.getChildren().addAll(new Label("Comunidad:"), txtBusquedaUser, btnVisitar, btnMiPerfil, btnLogOut);
+
+        // --- 2. TABLA PRINCIPAL ---
+        TableView<Videojuego> tabla = new TableView<>();
+        tabla.setOnMouseClicked(event -> {
+            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
+                Videojuego seleccionado = tabla.getSelectionModel().getSelectedItem();
+                if (seleccionado != null) {
+                    new GameProfileView().start(seleccionado.getTitulo());
+                }
             }
         });
-        buscadorComunidad.getChildren().addAll(new Label("Comunidad:"), txtBusquedaUser, btnVisitar);
+        TableColumn<Videojuego, String> colTit = new TableColumn<>("Título");
+        colTit.setCellValueFactory(new PropertyValueFactory<>("titulo"));
+        TableColumn<Videojuego, String> colEst = new TableColumn<>("Estado");
+        colEst.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        TableColumn<Videojuego, Integer> colNot = new TableColumn<>("Nota");
+        colNot.setCellValueFactory(new PropertyValueFactory<>("valoracion"));
+        TableColumn<Videojuego, String> colRes = new TableColumn<>("Reseña");
+        colRes.setCellValueFactory(new PropertyValueFactory<>("resena"));
 
-        HBox root = new HBox(20);
+        tabla.getColumns().addAll(colTit, colEst, colNot, colRes);
+        tabla.setItems(cargarDatos(usuarioId));
+
+        // --- 3. FORMULARIO IZQUIERDO ---
         VBox formulario = new VBox(10);
-        formulario.setMinWidth(220);
+        formulario.setMinWidth(280);
 
-        Label lblAdd = new Label("GESTIÓN DE JUEGOS");
-        lblAdd.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-
-        ComboBox<String> cbCategoria = new ComboBox<>();
-        cbCategoria.setPromptText("Selecciona Categoría");
-        cbCategoria.setMaxWidth(Double.MAX_VALUE);
-        cbCategoria.setItems(service.obtenerNombresCategorias());
-
-        ComboBox<String> cbConsola = new ComboBox<>();
-        cbConsola.setPromptText("Selecciona Consola");
-        cbConsola.setMaxWidth(Double.MAX_VALUE);
-        cbConsola.setItems(service.obtenerNombresConsolas());
-
-        ComboBox<String> cbJuegoCatalogo = new ComboBox<>();
-        cbJuegoCatalogo.setPromptText("Escribe para buscar...");
-        cbJuegoCatalogo.setMaxWidth(Double.MAX_VALUE);
-        cbJuegoCatalogo.setDisable(true);
-        cbJuegoCatalogo.setEditable(true);
-
-        ObservableList<String> listaJuegosMaster = FXCollections.observableArrayList();
-
-        cbConsola.setOnAction(e -> {
-            if (cbCategoria.getValue() != null && cbConsola.getValue() != null) {
-                listaJuegosMaster.setAll(service.obtenerJuegosFiltrados(cbCategoria.getValue(), cbConsola.getValue()));
-                cbJuegoCatalogo.setItems(listaJuegosMaster);
-                cbJuegoCatalogo.setDisable(false);
-            }
-        });
-
-        cbJuegoCatalogo.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
-            if (cbJuegoCatalogo.isDisable()) return;
-            if (newVal == null || newVal.isEmpty()) {
-                cbJuegoCatalogo.setItems(listaJuegosMaster);
-            } else {
-                FilteredList<String> filteredData = new FilteredList<>(listaJuegosMaster, s ->
-                        s.toLowerCase().contains(newVal.toLowerCase())
-                );
-                cbJuegoCatalogo.setItems(filteredData);
-                cbJuegoCatalogo.show();
+        ComboBox<String> cbBusquedaJuego = new ComboBox<>();
+        cbBusquedaJuego.setEditable(true);
+        cbBusquedaJuego.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null && newVal.length() > 2) {
+                cbBusquedaJuego.setItems(service.buscarEnCatalogoGlobal(newVal));
+                cbBusquedaJuego.show();
             }
         });
 
         ComboBox<String> cbEstado = new ComboBox<>();
         cbEstado.getItems().addAll("pendiente", "jugando", "jugado");
-        cbEstado.setPromptText("Estado");
-        cbEstado.setMaxWidth(Double.MAX_VALUE);
+        cbEstado.setValue("pendiente");
 
         ComboBox<Integer> cbNota = new ComboBox<>();
-        cbNota.getItems().addAll(1, 2, 3, 4, 5);
-        cbNota.setPromptText("Nota (1-5)");
-        cbNota.setMaxWidth(Double.MAX_VALUE);
+        cbNota.getItems().addAll(0, 1, 2, 3, 4, 5);
+        cbNota.setValue(0);
 
         TextArea txtResena = new TextArea();
         txtResena.setPromptText("Escribe aquí tu reseña...");
-        txtResena.setPrefRowCount(3);
-        txtResena.setWrapText(true);
+        txtResena.setPrefRowCount(4);
 
-        Label lblMediaPublico = new Label("Media Global: -");
-        lblMediaPublico.setStyle("-fx-font-style: italic; -fx-text-fill: #555;");
+        // Cargar datos en formulario al seleccionar fila
+        tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, sel) -> {
+            if (sel != null) {
+                cbBusquedaJuego.getEditor().setText(sel.getTitulo());
+                cbEstado.setValue(sel.getEstado());
+                cbNota.setValue(sel.getValoracion());
+                txtResena.setText(sel.getResena());
+            }
+        });
 
-        Button btnAdd = new Button("Guardar Nuevo");
-        btnAdd.setMaxWidth(Double.MAX_VALUE);
+        ListView<String> lvAmigos = new ListView<>();
+        lvAmigos.setPrefHeight(200);
+        lvAmigos.setItems(cargarAmigos(usuarioId));
 
-        Button btnUpdate = new Button("Actualizar Seleccionado");
-        btnUpdate.setMaxWidth(Double.MAX_VALUE);
-        btnUpdate.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
-
-        Button btnDelete = new Button("Eliminar Seleccionado");
-        btnDelete.setStyle("-fx-background-color: #ff4d4d; -fx-text-fill: white;");
-        btnDelete.setMaxWidth(Double.MAX_VALUE);
-
-        Button btnPerfil = new Button("Mi Perfil");
-        btnPerfil.setMaxWidth(Double.MAX_VALUE);
-        btnPerfil.setStyle("-fx-background-color: #2196F3; -fx-text-fill: white;");
-
-        Button btnLogOut = new Button("Cerrar Sesión");
-        btnLogOut.setMaxWidth(Double.MAX_VALUE);
-        btnLogOut.setStyle("-fx-background-color: #607D8B; -fx-text-fill: white;");
-
-        formulario.getChildren().addAll(
-                lblAdd, cbCategoria, cbConsola, cbJuegoCatalogo, cbEstado, cbNota,
-                txtResena, lblMediaPublico, btnAdd, btnUpdate, btnDelete, btnPerfil, btnLogOut
-        );
-
-        TableView<Videojuego> tabla = new TableView<>();
-        HBox.setHgrow(tabla, Priority.ALWAYS);
-
-        // --- COLORES DINÁMICOS POR ESTADO (STYLE MAL) ---
-        tabla.setRowFactory(tv -> new TableRow<Videojuego>() {
-            @Override
-            protected void updateItem(Videojuego item, boolean empty) {
-                super.updateItem(item, empty);
-                if (item == null || empty) {
-                    setStyle("");
-                } else {
-                    String colorBase;
-                    String borde;
-
-                    switch (item.getEstado()) {
-                        case "jugando": colorBase = "#e1f5fe"; borde = "#03a9f4"; break;
-                        case "jugado": colorBase = "#e8f5e9"; borde = "#4caf50"; break;
-                        case "pendiente": colorBase = "#f5f5f5"; borde = "#9e9e9e"; break;
-                        default: colorBase = "white"; borde = "transparent"; break;
-                    }
-
-                    setStyle("-fx-background-color: " + colorBase + "; " +
-                            "-fx-border-color: " + borde + "; " +
-                            "-fx-border-width: 0 0 0 5; " +
-                            "-fx-text-background-color: black;");
+        // Evento Doble Clic en Amigos
+        lvAmigos.setOnMouseClicked(event -> {
+            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
+                String seleccionado = lvAmigos.getSelectionModel().getSelectedItem();
+                if (seleccionado != null) {
+                    new PublicProfileView().start(seleccionado, usuarioId);
                 }
             }
         });
 
-        TableColumn<Videojuego, String> colTitulo = new TableColumn<>("Título");
-        colTitulo.setCellValueFactory(new PropertyValueFactory<>("titulo"));
-        colTitulo.setPrefWidth(200);
+        Button btnAdd = new Button("Guardar Nuevo");
+        btnAdd.setMaxWidth(Double.MAX_VALUE);
+        Button btnUpdate = new Button("Actualizar Seleccionado");
+        btnUpdate.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white;");
+        btnUpdate.setMaxWidth(Double.MAX_VALUE);
+        Button btnDelete = new Button("Eliminar Seleccionado");
+        btnDelete.setStyle("-fx-background-color: #F44336; -fx-text-fill: white;");
+        btnDelete.setMaxWidth(Double.MAX_VALUE);
 
-        TableColumn<Videojuego, String> colEstado = new TableColumn<>("Estado");
-        colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        formulario.getChildren().addAll(
+                new Label("GESTIÓN DE JUEGOS"), cbBusquedaJuego, cbEstado, cbNota, txtResena,
+                btnAdd, btnUpdate, btnDelete, new Separator(),
+                new Label("MIS AMIGOS (Doble clic)"), lvAmigos
+        );
 
-        TableColumn<Videojuego, Integer> colNota = new TableColumn<>("Nota");
-        colNota.setCellValueFactory(new PropertyValueFactory<>("valoracion"));
+        // --- 4. LÓGICA DE BOTONES ---
 
-        tabla.getColumns().addAll(colTitulo, colEstado, colNota);
-        tabla.setItems(cargarDatos(usuarioId));
+        btnLogOut.setOnAction(e -> {
+            stage.close();
+            try { new LoginApp().start(new Stage()); } catch (Exception ex) {}
+        });
 
-        // --- LÓGICA DE INTERACCIÓN ---
-        tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                cbJuegoCatalogo.getEditor().setText(newSelection.getTitulo());
-                cbEstado.setValue(newSelection.getEstado());
-                cbNota.setValue(newSelection.getValoracion());
-                txtResena.setText(newSelection.getResena());
-                cbCategoria.setDisable(true);
-                cbConsola.setDisable(true);
-                cbJuegoCatalogo.setDisable(true);
+        btnMiPerfil.setOnAction(e -> {
+            String miNombre = obtenerMiNombre(usuarioId);
+            if (miNombre != null) {
+                PublicProfileView ppv = new PublicProfileView();
+                ppv.start(miNombre, usuarioId);
+            }
+        });
 
-                double media = service.obtenerMediaPublico(newSelection.getTitulo());
-                lblMediaPublico.setText(media == 0.0 ? "Media Global: Sin votos" : "Media Global: " + String.format("%.1f", media) + " / 5");
+        btnVisitar.setOnAction(e -> {
+            String userABuscar = txtBusquedaUser.getText().trim();
+            String miNombre = obtenerMiNombre(usuarioId);
+
+            if (!userABuscar.isEmpty()) {
+                if (userABuscar.equalsIgnoreCase(miNombre)) {
+                    // Si intenta buscarse a sí mismo, le avisamos y abrimos su perfil
+                    new Alert(Alert.AlertType.INFORMATION, "Estás viendo tu propio perfil.").show();
+                    new PublicProfileView().start(miNombre, usuarioId);
+                } else {
+                    PublicProfileView ppv = new PublicProfileView();
+                    // Usamos un pequeño truco: al cerrarse la ventana de perfil, refrescamos la lista
+                    Stage profileStage = ppv.start(userABuscar, usuarioId);
+                    profileStage.setOnHiding(event -> {
+                        lvAmigos.setItems(cargarAmigos(usuarioId));
+                    });
+                }
             }
         });
 
         btnAdd.setOnAction(e -> {
-            String juegoSeleccionado = cbJuegoCatalogo.getEditor().getText();
-            String estado = cbEstado.getValue();
-            if (!juegoSeleccionado.isEmpty() && listaJuegosMaster.contains(juegoSeleccionado) && estado != null) {
-                service.añadirVideojuego(usuarioId, juegoSeleccionado, estado);
-                tabla.setItems(cargarDatos(usuarioId));
-                limpiarFormulario(cbCategoria, cbConsola, cbJuegoCatalogo, cbEstado, cbNota, txtResena, lblMediaPublico);
-            } else {
-                new Alert(Alert.AlertType.WARNING, "Selecciona un juego válido del catálogo.").show();
+            String titulo = cbBusquedaJuego.getEditor().getText();
+            if (service.existeEnCatalogo(titulo)) {
+                if (service.añadirVideojuego(usuarioId, titulo, cbEstado.getValue())) {
+                    tabla.setItems(cargarDatos(usuarioId));
+                } else {
+                    new Alert(Alert.AlertType.INFORMATION, "Ya tienes este juego").show();
+                }
             }
         });
 
         btnUpdate.setOnAction(e -> {
             Videojuego sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel != null && service.actualizarVideojuego(sel.getId(), cbEstado.getValue(), cbNota.getValue(), txtResena.getText())) {
+            if (sel != null) {
+                service.actualizarVideojuego(sel.getId(), cbEstado.getValue(), cbNota.getValue(), txtResena.getText());
                 tabla.setItems(cargarDatos(usuarioId));
-                limpiarFormulario(cbCategoria, cbConsola, cbJuegoCatalogo, cbEstado, cbNota, txtResena, lblMediaPublico);
             }
         });
 
         btnDelete.setOnAction(e -> {
             Videojuego sel = tabla.getSelectionModel().getSelectedItem();
-            if (sel != null && new Alert(Alert.AlertType.CONFIRMATION, "¿Borrar juego?").showAndWait().get() == ButtonType.OK) {
-                if (service.eliminarVideojuego(sel.getId())) tabla.setItems(cargarDatos(usuarioId));
+            if (sel != null && service.eliminarVideojuego(sel.getId())) {
+                tabla.setItems(cargarDatos(usuarioId));
             }
         });
 
-        btnPerfil.setOnAction(e -> new PerfilView().start(usuarioId));
-        btnLogOut.setOnAction(e -> { stage.close(); try { new LoginApp().start(new Stage()); } catch (Exception ex) {} });
+        HBox contenedor = new HBox(20, formulario, tabla);
+        HBox.setHgrow(tabla, Priority.ALWAYS);
+        layoutPrincipal.getChildren().addAll(buscadorComunidad, contenedor);
 
-        root.getChildren().addAll(formulario, tabla);
-        layoutPrincipal.getChildren().addAll(buscadorComunidad, root);
-
-        Scene scene = new Scene(layoutPrincipal, 900, 700);
-        stage.setTitle("MyGameList - Gestión de Biblioteca");
-        stage.setScene(scene);
+        stage.setScene(new Scene(layoutPrincipal, 1150, 750));
+        stage.setTitle("MyGameList - Biblioteca de Usuario");
         stage.show();
     }
 
-    private ObservableList<Videojuego> cargarDatos(int usuarioId) {
+    private String obtenerMiNombre(int id) {
+        String sql = "select username from usuarios where id = ?";
+        try (Connection conn = ConexionDB.conectar(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getString("username");
+        } catch (SQLException e) { e.printStackTrace(); }
+        return null;
+    }
+
+    private ObservableList<Videojuego> cargarDatos(int id) {
         ObservableList<Videojuego> lista = FXCollections.observableArrayList();
         String sql = "select * from videojuegos where usuario_id = ?";
         try (Connection conn = ConexionDB.conectar(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, usuarioId);
+            stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 lista.add(new Videojuego(rs.getInt("id"), rs.getInt("usuario_id"), rs.getString("titulo"),
@@ -238,10 +215,14 @@ public class BibliotecaView {
         return lista;
     }
 
-    private void limpiarFormulario(ComboBox<String> cat, ComboBox<String> con, ComboBox<String> jue, ComboBox<String> est, ComboBox<Integer> not, TextArea res, Label med) {
-        cat.setDisable(false); cat.setValue(null);
-        con.setDisable(false); con.setValue(null);
-        jue.setDisable(true); jue.getEditor().clear(); jue.setValue(null);
-        est.setValue(null); not.setValue(null); res.clear(); med.setText("Media Global: -");
+    private ObservableList<String> cargarAmigos(int id) {
+        ObservableList<String> amigos = FXCollections.observableArrayList();
+        String sql = "select amigo_nombre from amigos where usuario_id = ?";
+        try (Connection conn = ConexionDB.conectar(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) amigos.add(rs.getString("amigo_nombre"));
+        } catch (SQLException e) { e.printStackTrace(); }
+        return amigos;
     }
 }
