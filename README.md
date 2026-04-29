@@ -73,13 +73,12 @@ Muchos jugadores tienen juegos en **distintas plataformas** y no disponen de una
 ## 🛠 Tecnologías Utilizadas
 
 - **Java** – Lógica de negocio.  
-- **Jackson** – Lectura/escritura de archivos JSON.  
-- **Bootstrap** – UI responsive y moderna.  
+- **MySQL** – Gestor BBDD.  
 - **GitHub** – Control de versiones colaborativo.
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?logo=java&logoColor=white)
-![JSON](https://img.shields.io/badge/JSON-000000?logo=json&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?logo=bootstrap&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+
 
 ---
 
@@ -116,10 +115,10 @@ Staem/
 
 ## 🧑‍🤝‍🧑 Equipo de Desarrollo
 
-- Manuel Campos Hernández – Líder  
-- Álvaro Benítez  
-- Víctor Aguilera  
-- Alejandro Bernal  
+- Manuel Campos Hernández 
+- Álvaro Benítez Cardoso
+- Víctor Aguilera Rodríguez 
+- Alejandro Bernal Real
 
 ---
 
