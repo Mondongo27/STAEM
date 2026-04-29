@@ -1,110 +1,141 @@
-# 🎮 GameManager - Aplicación de Gestión de Videojuegos
 
-**GameManager** es una aplicación en **Java** que permite a los usuarios gestionar su biblioteca de videojuegos.
-Puedes organizar tus juegos por categoría, consola, estado de juego y dejar reseñas según tu progreso.
+# 🎮 Staem – Plataforma de Gestión de Videojuegos
 
----
+![Banner](https://img.shields.io/badge/Proyecto-1ºDAM-brightgreen)
+![Estado](https://img.shields.io/badge/Estado-Desarrollo-yellow)
+![Licencia](https://img.shields.io/badge/Licencia-MIT-blue)
 
-## 📝 Características
+![Videojuegos](https://media.giphy.com/media/3o6Zt8MgUuvSbkZYWc/giphy.gif)
 
-- Biblioteca de videojuegos por **categoría** (shooter, RPG, etc.) y **consola** (PS5, Xbox, PC).
-- Cada videojuego incluye:
-  - Logo  
-  - Descripción  
-  - Valoración del público y propia  
-  - Estado de juego: Pendiente, Jugando, Completado  
-  - Posibilidad de añadir reseñas (si se está jugando o completado)
-- Perfil de usuario que muestra todas sus listas:
-  - Juegos pendientes  
-  - Juegos en progreso  
-  - Juegos completados
-- Listado opcional de juegos por puntuación.
-- Modular y orientado a objetos para facilitar ampliaciones futuras.
+**Staem** es tu **biblioteca centralizada de videojuegos**. Gestiona, organiza y sigue tu progreso con una experiencia intuitiva y visual.
 
 ---
 
-## 📂 Estructura del proyecto
+## 🔥 Problema que Resolvemos
 
+Muchos jugadores tienen juegos en **distintas plataformas** y no disponen de una herramienta para:
+
+- 📚 Organizar su biblioteca.  
+- ⏱ Hacer seguimiento del progreso: `Jugado`, `En progreso`, `Pendiente`.  
+- 📝 Guardar reseñas y puntuaciones personales.  
+- 🧩 Crear perfiles individuales por juego con estadísticas y configuraciones propias.
+
+---
+
+## 👥 Usuarios Objetivo
+
+- Jugadores que quieren controlar todos sus juegos desde un solo lugar.  
+- Personas que buscan centralizar reseñas y valoraciones.  
+- Quienes quieren llevar un seguimiento visual de su progreso.
+
+---
+
+## ⚡ Funcionalidades Principales
+
+<details>
+<summary>📂 Gestión de Juegos</summary>
+
+- Añadir, modificar y eliminar juegos de la biblioteca.  
+- Filtrar y ordenar juegos según categoría, nombre o progreso.
+</details>
+
+<details>
+<summary>⏱ Seguimiento de Progreso</summary>
+
+- Estados: `Jugado`, `En progreso`, `Pendiente`.  
+- Visualización rápida del estado de cada juego.
+</details>
+
+<details>
+<summary>📝 Valoraciones y Reseñas</summary>
+
+- Puntuar juegos y añadir reseñas personales.  
+- Editar o eliminar reseñas existentes.
+</details>
+
+<details>
+<summary>🧩 Perfiles de Juegos</summary>
+
+- Cada juego tiene su **perfil propio**.  
+- Almacena configuraciones, estadísticas y notas personalizadas.  
+- Personalización completa para cada jugador.
+</details>
+
+<details>
+<summary>👤 Usuarios y Autenticación</summary>
+
+- Registro e inicio de sesión de usuarios.  
+- Bibliotecas y perfiles personalizados por usuario.
+</details>
+
+---
+
+## 🛠 Tecnologías Utilizadas
+
+- **Java** – Lógica de negocio.  
+- **Jackson** – Lectura/escritura de archivos JSON.  
+- **Bootstrap** – UI responsive y moderna.  
+- **GitHub** – Control de versiones colaborativo.
+
+![Java](https://img.shields.io/badge/Java-ED8B00?logo=java&logoColor=white)
+![JSON](https://img.shields.io/badge/JSON-000000?logo=json&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?logo=bootstrap&logoColor=white)
+
+---
+
+## 🚀 Cómo Ejecutar
+
+```bash
+git clone https://github.com/tu-usuario/staem.git
 ```
-GameManager/
+
+1. Abre el proyecto en **Eclipse**.  
+2. Instala las dependencias de **Jackson**.  
+3. Ejecuta la clase principal `Main.java`.  
+4. ¡A disfrutar de tu biblioteca de videojuegos!
+
+---
+
+## 📂 Estructura del Proyecto
+
+```text
+Staem/
 │
 ├─ src/
-│   ├─ modelo/
-│   │   ├─ Videojuego.java
-│   │   ├─ EstadoJuego.java
-│   │   └─ Usuario.java
-│   │
-│   ├─ servicios/
-│   │   └─ Biblioteca.java
-│   │
-│   └─ app/
-│       └─ Main.java
+│   ├─ controllers/    # Lógica de control
+│   ├─ models/         # Clases Juego, Usuario, Perfil
+│   └─ utils/          # Funciones auxiliares y JSON
 │
-├─ README.md
-└─ .gitignore
+├─ data/
+│   └─ juegos.json     # Persistencia de datos
+│
+└─ README.md           # Este documento
 ```
 
 ---
 
-## ⚙️ Instalación
+## 🧑‍🤝‍🧑 Equipo de Desarrollo
 
-1. Clonar el repositorio:
-```bash
-git clone https://github.com/TU_USUARIO/GameManager.git
-```
-
-2. Abrir el proyecto en tu IDE favorito (IntelliJ, Eclipse, NetBeans…).
-
-3. Compilar y ejecutar:
-```bash
-cd GameManager/src
-javac app/Main.java
-java app.Main
-```
+- Manuel Campos Hernández – Líder  
+- Álvaro Benítez  
+- Víctor Aguilera  
+- Alejandro Bernal  
 
 ---
 
-## 🚀 Uso
+## 🎯 Próximos Pasos
 
-- Añadir videojuegos a la biblioteca:
-```java
-Videojuego juego = new Videojuego("Halo Infinite", "halo.png", "Shooter futurista", "Shooter", "Xbox");
-biblioteca.agregarJuego(juego);
-```
-- Cambiar estado del juego:
-```java
-juego.cambiarEstado(EstadoJuego.JUGANDO);
-```
-- Añadir reseña (solo si estás jugando o completado):
-```java
-juego.agregarReseña("¡Me está encantando!");
-```
-- Mostrar listas del usuario:
-```java
-usuario.mostrarListas();
-```
-- Ordenar juegos por valoración:
-```java
-biblioteca.ordenarPorValoracion();
-```
+- Sincronización con plataformas externas (Steam, Epic, etc.).  
+- Mejora visual con **gráficos de progreso y estadísticas**.  
+- Notificaciones y alertas para novedades de juegos.
 
 ---
 
-## 👥 Equipo
+## 📄 Licencia
 
-- **Álvaro Benítez** – Modelo `Videojuego`  
-- **Víctor Aguilera** – Clase `Usuario`  
-- **Manolo Campos** – Clase `Biblioteca`  
-- **Alejandro Bernal** – `Main` y pruebas integradas  
+[MIT License](LICENSE)
 
 ---
 
-## 📌 Notas
-
-- Proyecto modular, fácil de ampliar con nuevas funcionalidades.  
-- Ideal para aprender **Java OOP**, manejo de listas y enums.  
-
----
-
-## 🖤 ¡Disfruta gestionando tus videojuegos!
-
+> Hecho con 💚 por el equipo de 1º DAM.  
+> Que la gestión de tus juegos nunca vuelva a ser un caos!
