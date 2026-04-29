@@ -95,24 +95,6 @@ git clone https://github.com/tu-usuario/staem.git
 
 ---
 
-## 📂 Estructura del Proyecto
-
-```text
-Staem/
-│
-├─ src/
-│   ├─ controllers/    # Lógica de control
-│   ├─ models/         # Clases Juego, Usuario, Perfil
-│   └─ utils/          # Funciones auxiliares y JSON
-│
-├─ data/
-│   └─ juegos.json     # Persistencia de datos
-│
-└─ README.md           # Este documento
-```
-
----
-
 ## 🧑‍🤝‍🧑 Equipo de Desarrollo
 
 - Manuel Campos Hernández 
