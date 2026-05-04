@@ -1,0 +1,614 @@
+/* ===================================================
+   MYGAMELIST - ULTRA MODERN DARK UI
+   =================================================== */
+
+.root {
+    -fx-background-color:
+        radial-gradient(center 20% 20%, radius 120%, #1a2636 0%, #0b1119 55%, #070b11 100%);
+    -fx-font-family: "Inter", "Segoe UI", Arial, sans-serif;
+
+    /* Colores base */
+    -primary: #66c0f4;
+    -primary-hover: #8ad7ff;
+    -secondary: #1b2838;
+    -panel: rgba(18, 28, 40, 0.92);
+    -panel-light: rgba(28, 40, 56, 0.95);
+    -border: rgba(102,192,244,0.18);
+    -text-main: #e8f2ff;
+    -text-soft: #8ea7c0;
+    -success: #46d38a;
+    -danger: #ff5f6d;
+}
+
+/* ===================================================
+   TEXTOS
+   =================================================== */
+
+.label {
+    -fx-text-fill: -text-main;
+    -fx-font-size: 13px;
+    -fx-font-smoothing-type: lcd;
+}
+
+.title {
+    -fx-font-size: 30px;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, #66c0f4, #b7ecff);
+}
+
+.subtitle {
+    -fx-text-fill: -text-soft;
+    -fx-font-size: 12px;
+    -fx-opacity: 0.9;
+}
+
+.section-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #cfeaff;
+}
+
+/* ===================================================
+   CONTENEDORES
+   =================================================== */
+
+.vbox,
+.hbox {
+    -fx-spacing: 12;
+}
+
+.panel {
+    -fx-background-color: linear-gradient(to bottom right,
+        rgba(25, 37, 52, 0.96),
+        rgba(15, 22, 32, 0.96));
+
+    -fx-background-radius: 22;
+    -fx-border-radius: 22;
+
+    -fx-border-color: rgba(255,255,255,0.05);
+    -fx-border-width: 1;
+
+    -fx-padding: 22;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.55), 30, 0.25, 0, 10);
+}
+
+/* Glass effect */
+.glass-panel {
+    -fx-background-color: rgba(255,255,255,0.05);
+
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+
+    -fx-border-color: rgba(255,255,255,0.08);
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0.15, 0, 6);
+}
+
+/* ===================================================
+   BOTONES
+   =================================================== */
+
+.button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #2f6ea7, #244866);
+
+    -fx-text-fill: white;
+
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+
+    -fx-padding: 11 22;
+
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-width: 1;
+
+    -fx-cursor: hand;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.35), 15, 0.2, 0, 4);
+}
+
+.button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right, #66c0f4, #4ea7e3);
+
+    -fx-text-fill: #07131f;
+
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.45), 20, 0.3, 0, 6);
+}
+
+.button:pressed {
+    -fx-scale-x: 0.97;
+    -fx-scale-y: 0.97;
+
+    -fx-background-color: #1d8dd1;
+}
+
+/* BOTONES SECUNDARIOS */
+
+.secondary-button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #2b3440, #1d252e);
+
+    -fx-text-fill: #d6e3f0;
+}
+
+.secondary-button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right, #384657, #283341);
+}
+
+/* SUCCESS */
+
+.success-button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #36c979, #23995a);
+}
+
+.success-button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right, #52e89a, #30b46f);
+}
+
+/* DANGER */
+
+.danger-button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #ff5f6d, #d83d52);
+}
+
+.danger-button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right, #ff7d89, #ef4f66);
+}
+
+/* LOGOUT */
+
+.logout-button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #59616b, #3d434a);
+}
+
+/* ===================================================
+   INPUTS
+   =================================================== */
+
+.text-field,
+.password-field,
+.text-area,
+.combo-box {
+    -fx-background-color:
+        linear-gradient(to bottom, #101923, #0d141d);
+
+    -fx-text-fill: #eef6ff;
+
+    -fx-background-radius: 14;
+    -fx-border-radius: 14;
+
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-width: 1.2;
+
+    -fx-padding: 12;
+
+    -fx-highlight-fill: #66c0f4;
+    -fx-highlight-text-fill: #08131f;
+}
+
+.text-field:hover,
+.password-field:hover,
+.text-area:hover,
+.combo-box:hover {
+    -fx-border-color: rgba(102,192,244,0.30);
+}
+
+.text-field:focused,
+.password-field:focused,
+.text-area:focused,
+.combo-box:focused {
+    -fx-border-color: #66c0f4;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.35), 18, 0.25, 0, 0);
+}
+
+.text-input {
+    -fx-prompt-text-fill: #6f8498;
+}
+
+/* ===================================================
+   TEXT AREA / RESEÑAS
+   =================================================== */
+
+/* AQUI ESTÁ EL FIX DEL TEXTO BLANCO SOBRE FONDO BLANCO */
+
+.text-area .content {
+    -fx-background-color: #111923;
+    -fx-background-radius: 14;
+}
+
+.text-area {
+    -fx-text-fill: #e8f2ff;
+}
+
+.text-area .text {
+    -fx-fill: #e8f2ff;
+}
+
+/* ===================================================
+   TABLE VIEW
+   =================================================== */
+
+.table-view {
+    -fx-background-color: rgba(17, 26, 37, 0.95);
+
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+
+    -fx-border-color: rgba(102,192,244,0.12);
+
+    -fx-padding: 10;
+}
+
+.table-view .column-header-background {
+    -fx-background-color:
+        linear-gradient(to right, #1b3246, #20384f);
+
+    -fx-background-radius: 16 16 0 0;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #9ad7ff;
+    -fx-font-size: 13px;
+    -fx-font-weight: 800;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+
+    -fx-border-color: transparent;
+
+    -fx-background-insets: 3;
+    -fx-padding: 4;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: rgba(102,192,244,0.08);
+
+    -fx-background-radius: 12;
+}
+
+.table-row-cell:selected {
+    -fx-background-color:
+        linear-gradient(to right, #2b5374, #37668d);
+
+    -fx-background-radius: 12;
+}
+
+.table-cell {
+    -fx-text-fill: #dcecff;
+
+    -fx-alignment: CENTER-LEFT;
+}
+
+/* ===================================================
+   LIST VIEW
+   =================================================== */
+
+.list-view {
+    -fx-background-color: rgba(17, 26, 37, 0.95);
+
+    -fx-background-radius: 18;
+    -fx-border-radius: 18;
+
+    -fx-border-color: rgba(102,192,244,0.12);
+
+    -fx-padding: 6;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+
+    -fx-text-fill: #dcecff;
+
+    -fx-padding: 12;
+
+    -fx-background-radius: 12;
+}
+
+.list-cell:hover {
+    -fx-background-color: rgba(102,192,244,0.10);
+}
+
+.list-cell:selected {
+    -fx-background-color:
+        linear-gradient(to right, #2f5d88, #4177a7);
+}
+
+/* ===================================================
+   SCROLLBAR
+   =================================================== */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .track {
+    -fx-background-color: rgba(255,255,255,0.03);
+
+    -fx-background-radius: 20;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color:
+        linear-gradient(to bottom, #3c5f80, #29435a);
+
+    -fx-background-radius: 20;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color:
+        linear-gradient(to bottom, #5d8bb5, #3e6485);
+}
+
+/* ===================================================
+   COMBOBOX
+   =================================================== */
+
+.combo-box-popup .list-view {
+    -fx-background-color: #16202d;
+
+    -fx-background-radius: 14;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: rgba(102,192,244,0.12);
+}
+
+/* ===================================================
+   DIALOGS
+   =================================================== */
+
+.dialog-pane {
+    -fx-background-color:
+        linear-gradient(to bottom right, #16202d, #0f1722);
+
+    -fx-background-radius: 22;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.55), 30, 0.25, 0, 10);
+}
+
+.dialog-pane .label {
+    -fx-text-fill: #e8f2ff;
+}
+
+.dialog-pane .button {
+    -fx-background-color:
+        linear-gradient(to bottom right, #2f6ea7, #244866);
+}
+
+/* ===================================================
+   TOOLTIP
+   =================================================== */
+
+.tooltip {
+    -fx-background-color: rgba(28,40,56,0.96);
+
+    -fx-text-fill: white;
+
+    -fx-background-radius: 10;
+
+    -fx-padding: 10 14;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.4), 12, 0.2, 0, 3);
+}
+
+/* ===================================================
+   SEPARADORES
+   =================================================== */
+
+.separator .line {
+    -fx-border-color: rgba(102,192,244,0.15);
+    -fx-border-width: 1;
+}
+
+/* ===================================================
+   CARDS / GAME ITEM
+   =================================================== */
+
+.game-card {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            rgba(31,45,62,0.95),
+            rgba(18,27,38,0.95));
+
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+
+    -fx-border-color: rgba(255,255,255,0.05);
+
+    -fx-padding: 18;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.45), 22, 0.2, 0, 8);
+}
+
+.game-card:hover {
+    -fx-border-color: rgba(102,192,244,0.35);
+
+    -fx-scale-x: 1.01;
+    -fx-scale-y: 1.01;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.18), 26, 0.25, 0, 10);
+}
+
+/* ===================================================
+   ULTRA PREMIUM ALERT
+   =================================================== */
+
+.custom-alert {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            rgba(20,30,42,0.98),
+            rgba(10,15,24,0.98));
+
+    -fx-background-radius: 30;
+    -fx-border-radius: 30;
+
+    -fx-border-color:
+        linear-gradient(to bottom right,
+            rgba(102,192,244,0.45),
+            rgba(255,255,255,0.05));
+
+    -fx-border-width: 1.8;
+
+    -fx-padding: 26;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(0,0,0,0.75), 45, 0.30, 0, 14),
+        dropshadow(gaussian, rgba(102,192,244,0.18), 25, 0.20, 0, 0);
+}
+
+/* ===================================================
+   HEADER
+   =================================================== */
+
+.custom-alert:header .header-panel {
+    -fx-background-color:
+        linear-gradient(to right,
+            rgba(102,192,244,0.10),
+            rgba(102,192,244,0.02));
+
+    -fx-background-radius: 20 20 0 0;
+
+    -fx-padding: 20 20 12 20;
+}
+
+.custom-alert:header .header-panel .label {
+    -fx-text-fill: linear-gradient(to right, #66c0f4, #c7f0ff);
+
+    -fx-font-size: 24px;
+    -fx-font-weight: 900;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.35), 10, 0.2, 0, 0);
+}
+
+/* ===================================================
+   TEXTO
+   =================================================== */
+
+.custom-alert .content.label {
+    -fx-text-fill: #eef7ff;
+
+    -fx-font-size: 15px;
+    -fx-font-weight: 600;
+
+    -fx-line-spacing: 3px;
+
+    -fx-padding: 18 8 10 8;
+}
+
+/* ===================================================
+   BOTONES
+   =================================================== */
+
+.custom-alert .button {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            #66c0f4,
+            #317fbb);
+
+    -fx-text-fill: #08131f;
+
+    -fx-font-size: 14px;
+    -fx-font-weight: 900;
+
+    -fx-letter-spacing: 0.5px;
+
+    -fx-background-radius: 16;
+    -fx-border-radius: 16;
+
+    -fx-padding: 12 30;
+
+    -fx-border-color: rgba(255,255,255,0.15);
+    -fx-border-width: 1;
+
+    -fx-cursor: hand;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.35), 18, 0.25, 0, 6);
+}
+
+.custom-alert .button:hover {
+    -fx-background-color:
+        linear-gradient(to bottom right,
+            #8fe0ff,
+            #58b8ff);
+
+    -fx-scale-x: 1.06;
+    -fx-scale-y: 1.06;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.55), 24, 0.35, 0, 8);
+}
+
+.custom-alert .button:pressed {
+    -fx-scale-x: 0.96;
+    -fx-scale-y: 0.96;
+
+    -fx-background-color: #1f8fd4;
+}
+
+/* ===================================================
+   ICONO
+   =================================================== */
+
+.custom-alert:header *.graphic {
+    -fx-padding: 12;
+
+    -fx-effect:
+        dropshadow(gaussian, rgba(102,192,244,0.45), 12, 0.2, 0, 0);
+}
+
+/* ===================================================
+   PANEL INTERIOR
+   =================================================== */
+
+.custom-alert .button-bar {
+    -fx-padding: 15 0 5 0;
+}
+
+/* ===================================================
+   EFECTO GLASS
+   =================================================== */
+
+.custom-alert > *.content {
+    -fx-background-color:
+        rgba(255,255,255,0.02);
+
+    -fx-background-radius: 18;
+
+    -fx-padding: 12;
+}

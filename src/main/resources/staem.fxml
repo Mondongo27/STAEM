@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            stylesheets="@style.css"
+            fx:controller="com.example.app.BibliotecaController">
+
+    <!-- TOP BAR -->
+    <top>
+        <HBox spacing="10" styleClass="header" padding="10">
+            <Label text="STAEM" styleClass="title"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <TextField fx:id="txtBusquedaUser" promptText="Buscar usuario..." prefWidth="200"/>
+            <Button text="Perfil"/>
+            <Button text="Mi Perfil"/>
+            <Button text="Logout"/>
+        </HBox>
+    </top>
+
+    <Button text="Añadir juego" onAction="#añadirJuego"/>
+    <Button text="Actualizar" onAction="#actualizarJuego"/>
+    <Button text="Eliminar" onAction="#eliminarJuego"/>
+
+    <!-- CENTRO -->
+    <center>
+        <SplitPane dividerPositions="0.3">
+
+            <!-- PANEL IZQUIERDO (FORMULARIO) -->
+            <VBox spacing="10" padding="15">
+
+                <Label text="GESTIÓN DE JUEGOS" styleClass="title"/>
+
+                <ComboBox fx:id="cbJuego" promptText="Buscar juego..."/>
+                <ComboBox fx:id="cbEstado"/>
+                <ComboBox fx:id="cbNota"/>
+
+                <TextArea fx:id="txtResena" promptText="Escribe tu reseña..."/>
+
+                <Button text="Añadir juego"/>
+                <Button text="Actualizar"/>
+                <Button text="Eliminar"/>
+
+                <Separator/>
+
+                <Label text="AMIGOS"/>
+
+                <ListView fx:id="lvAmigos"/>
+
+            </VBox>
+
+            <!-- PANEL DERECHO (TABLA) -->
+            <VBox spacing="10" padding="15">
+
+                <TableView fx:id="tabla">
+
+                    <columns>
+                        <TableColumn text="Título" fx:id="colTitulo"/>
+                        <TableColumn text="Estado" fx:id="colEstado"/>
+                        <TableColumn text="Nota" fx:id="colNota"/>
+                        <TableColumn text="Reseña" fx:id="colResena"/>
+                    </columns>
+
+                </TableView>
+
+            </VBox>
+
+        </SplitPane>
+    </center>
+
+</BorderPane>
