@@ -5,15 +5,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class ConexionDB {
-    private static final String URL = "jdbc:mysql://localhost:3306/foro_videojuegos";
-    private static final String USER = "root";
-    private static final String PASS = "usuario";
+    private static final String URL = "jdbc:sqlite:staem.db";
 
     public static Connection conectar() {
         try {
-            return DriverManager.getConnection(URL, USER, PASS);
+            // En SQLite NO se pasan USER ni PASS, solo la URL
+            return DriverManager.getConnection(URL);
         } catch (SQLException e) {
-            System.out.println("error al conectar: " + e.getMessage());
+            System.out.println("Error al conectar a SQLite: " + e.getMessage());
             return null;
         }
     }

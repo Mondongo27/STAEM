@@ -9,33 +9,32 @@ import java.util.*;
 public class BibliotecaService {
 
     public boolean añadirVideojuego(int usuarioId, String titulo, String estado) {
-        String checkSql = "select count(*) from videojuegos where usuario_id = ? and titulo = ?";
-        String insertSql = "insert into videojuegos (usuario_id, titulo, estado) values (?, ?, ?)";
+        // Usamos los nombres de columna que pusimos en el punto 1
+        String checkSql = "SELECT count(*) FROM videojuegos WHERE usuario_id = ? AND titulo = ?";
+        String insertSql = "INSERT INTO videojuegos (usuario_id, titulo, estado, valoracion, resena) VALUES (?, ?, ?, 0, '')";
 
         try (Connection conn = ConexionDB.conectar()) {
-
+            // 1. Verificamos duplicados
             try (PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
                 checkStmt.setInt(1, usuarioId);
                 checkStmt.setString(2, titulo);
-
                 ResultSet rs = checkStmt.executeQuery();
-
                 if (rs.next() && rs.getInt(1) > 0) {
-                    return false;
+                    return false; // Aquí sí es porque ya existe
                 }
             }
 
+            // 2. Insertamos
             try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-
                 insertStmt.setInt(1, usuarioId);
                 insertStmt.setString(2, titulo);
                 insertStmt.setString(3, estado);
-
                 return insertStmt.executeUpdate() > 0;
             }
 
         } catch (SQLException e) {
+            // Esto te dirá en la consola de IntelliJ exactamente qué columna falta
+            System.err.println("ERROR SQL en añadirVideojuego: " + e.getMessage());
             return false;
         }
     }
@@ -206,8 +205,7 @@ public class BibliotecaService {
     }
 
     public boolean agregarAmigo(int usuarioId, String nombreAmigo) {
-
-        String sql = "insert ignore into amigos (usuario_id, amigo_nombre) values (?, ?)";
+        String sql = "INSERT OR IGNORE INTO amigos (usuario_id, amigo_nombre) VALUES (?, ?)";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -215,9 +213,11 @@ public class BibliotecaService {
             stmt.setInt(1, usuarioId);
             stmt.setString(2, nombreAmigo);
 
-            return stmt.executeUpdate() > 0;
+            int filasAfectadas = stmt.executeUpdate();
+            return filasAfectadas > 0;
 
         } catch (SQLException e) {
+            System.err.println("Error en agregarAmigo: " + e.getMessage());
             return false;
         }
     }

@@ -68,7 +68,7 @@ public class LoginApp extends Application {
         );
 
         // ===== SCENE =====
-        Scene scene = new Scene(layout, 350, 400);
+        Scene scene = new Scene(layout, 450, 500);
 
         // 🔥 CSS (IMPORTANTE: ruta correcta)
         scene.getStylesheets().add(
