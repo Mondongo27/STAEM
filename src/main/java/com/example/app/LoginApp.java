@@ -1,4 +1,5 @@
 package com.example.app;
+import javafx.scene.image.Image;
 
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -76,6 +77,7 @@ public class LoginApp extends Application {
         );
 
         stage.setTitle("Staem Manager v1.0");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
         stage.setScene(scene);
         stage.show();
     }
@@ -169,6 +171,7 @@ public class LoginApp extends Application {
         );
 
         regStage.setTitle("Staem - Registro");
+        regStage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
         regStage.setScene(scene);
         regStage.show();
     }

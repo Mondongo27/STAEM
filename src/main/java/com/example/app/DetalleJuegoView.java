@@ -1,4 +1,5 @@
 package com.example.app;
+import javafx.scene.image.Image;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -51,6 +52,7 @@ public class DetalleJuegoView {
 
         stage.setScene(scene);
         stage.setTitle("Ficha Técnica");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
         stage.show();
     }
 }

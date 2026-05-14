@@ -1,4 +1,5 @@
 package com.example.app;
+import javafx.scene.image.Image;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -171,6 +172,7 @@ public class PublicProfileView {
 
         stage.setScene(scene);
         stage.setTitle("Perfil de " + targetUsername);
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
         stage.show();
 
         return stage;

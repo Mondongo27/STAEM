@@ -1,4 +1,5 @@
 package com.example.app;
+import javafx.scene.image.Image;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -26,7 +27,6 @@ public class BibliotecaView {
         // =====================================================
 
         VBox layoutPrincipal = new VBox(20);
-
         layoutPrincipal.setPadding(new Insets(20));
 
         // =====================================================
@@ -378,55 +378,25 @@ public class BibliotecaView {
 
         btnVisitar.setOnAction(e -> {
 
-            String userABuscar =
-                    txtBusquedaUser.getText().trim();
-
-            String miNombre =
-                    obtenerMiNombre(usuarioId);
+            String userABuscar = txtBusquedaUser.getText().trim();
+            String miNombre = obtenerMiNombre(usuarioId);
 
             if (!userABuscar.isEmpty()) {
+                // 1. Verificar si el usuario existe en la DB
+                if (!service.existeUsuario(userABuscar)) {
+                    mostrarAlert("El usuario '" + userABuscar + "' no existe.");
+                    return; // Cortamos la ejecución aquí
+                }
 
-                if (
-                        userABuscar.equalsIgnoreCase(miNombre)
-                ) {
-
-                    Alert alert = new Alert(
-                            Alert.AlertType.INFORMATION
-                    );
-
-                    alert.setTitle("Perfil");
-                    alert.setHeaderText(null);
-
-                    alert.setContentText(
-                            "Estás viendo tu propio perfil."
-                    );
-
-                    alert.getDialogPane()
-                            .getStylesheets()
-                            .add(
-                                    getClass()
-                                            .getResource("/style.css")
-                                            .toExternalForm()
-                            );
-
-                    alert.showAndWait();
-
-                    new PublicProfileView()
-                            .start(miNombre, usuarioId);
-
+                // 2. Si existe, procedemos con la lógica que ya tenías
+                if (userABuscar.equalsIgnoreCase(miNombre)) {
+                    mostrarAlert("Estás viendo tu propio perfil.");
+                    new PublicProfileView().start(miNombre, usuarioId);
                 } else {
-
-                    PublicProfileView ppv =
-                            new PublicProfileView();
-
-                    Stage profileStage =
-                            ppv.start(userABuscar, usuarioId);
-
+                    PublicProfileView ppv = new PublicProfileView();
+                    Stage profileStage = ppv.start(userABuscar, usuarioId);
                     profileStage.setOnHiding(event -> {
-
-                        lvAmigos.setItems(
-                                cargarAmigos(usuarioId)
-                        );
+                        lvAmigos.setItems(cargarAmigos(usuarioId));
                     });
                 }
             }
@@ -436,10 +406,7 @@ public class BibliotecaView {
 
         btnAdd.setOnAction(e -> {
 
-            String titulo =
-                    cbBusquedaJuego
-                            .getEditor()
-                            .getText();
+            String titulo = cbBusquedaJuego.getEditor().getText();
 
             if (service.existeEnCatalogo(titulo)) {
 
@@ -548,6 +515,20 @@ public class BibliotecaView {
         stage.setScene(scene);
 
         stage.setTitle("STAEM");
+
+        stage.show();
+
+        // =====================================================
+        // CONFIGURACIÓN DE LA VENTANA
+        // =====================================================
+
+        stage.setScene(scene);
+        stage.setTitle("STAEM");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
+
+        // ESTA ES LA LÍNEA QUE DEBES AÑADIR:
+        stage.setMaximized(true);
+
 
         stage.show();
     }

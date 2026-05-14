@@ -1,4 +1,5 @@
 package com.example.app;
+import javafx.scene.image.Image;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -127,6 +128,7 @@ public class PerfilView {
 
         stage.setScene(scene);
         stage.setTitle("MyGameList - Perfil");
+        stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
         stage.show();
     }
 }

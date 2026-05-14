@@ -384,4 +384,21 @@ public class BibliotecaService {
 
         return detalles;
     }
+
+    public boolean existeUsuario(String username) {
+        String sql = "SELECT count(*) FROM usuarios WHERE username = ?";
+        try (Connection conn = ConexionDB.conectar();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, username);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 }
