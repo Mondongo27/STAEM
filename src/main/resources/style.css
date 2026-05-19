@@ -1,622 +1,511 @@
 /* ===================================================
-   MYGAMELIST - ULTRA MODERN DARK UI
+   STAEM - EPIC GAMES INSPIRED DARK UI
+   Modern • Gaming • Premium
    =================================================== */
 
 .root {
-    -fx-background-color:
-        radial-gradient(center 20% 20%, radius 120%, #1a2636 0%, #0b1119 55%, #070b11 100%);
-    -fx-font-family: "Inter", "Segoe UI", Arial, sans-serif;
+    /* Fondo oscuro tipo Epic Games */
+    -fx-background-color: #121212;
+    -fx-font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 
-    /* Colores base */
-    -primary: #66c0f4;
-    -primary-hover: #8ad7ff;
-    -secondary: #1b2838;
-    -panel: rgba(18, 28, 40, 0.92);
-    -panel-light: rgba(28, 40, 56, 0.95);
-    -border: rgba(102,192,244,0.18);
-    -text-main: #e8f2ff;
-    -text-soft: #8ea7c0;
-    -success: #46d38a;
-    -danger: #ff5f6d;
+    /* Variables Epic Games */
+    -epic-blue: #0078d4;
+    -epic-blue-hover: #1084d8;
+    -epic-green: #107c10;
+    -epic-red: #d13438;
+    -epic-yellow: #ffb900;
+
+    -bg-primary: #121212;
+    -bg-secondary: #1a1a1a;
+    -bg-tertiary: #2a2a2a;
+    -bg-elevated: #242424;
+
+    -border-color: rgba(255, 255, 255, 0.05);
+    -border-hover: rgba(255, 255, 255, 0.1);
+
+    -text-primary: #ffffff;
+    -text-secondary: rgba(255, 255, 255, 0.8);
+    -text-tertiary: rgba(255, 255, 255, 0.5);
+    -text-disabled: rgba(255, 255, 255, 0.3);
 }
 
 /* ===================================================
-   TEXTOS
+   TIPOGRAFÍA
    =================================================== */
 
 .label {
-    -fx-text-fill: -text-main;
+    -fx-text-fill: -text-primary;
     -fx-font-size: 13px;
-    -fx-font-smoothing-type: lcd;
+    -fx-font-weight: 400;
 }
 
 .title {
-    -fx-font-size: 30px;
-    -fx-font-weight: 800;
-    -fx-text-fill: linear-gradient(to right, #66c0f4, #b7ecff);
+    -fx-font-size: 32px;
+    -fx-font-weight: 700;
+    -fx-text-fill: -text-primary;
 }
 
 .subtitle {
-    -fx-text-fill: -text-soft;
-    -fx-font-size: 12px;
-    -fx-opacity: 0.9;
-}
-
-.section-title {
-    -fx-font-size: 18px;
-    -fx-font-weight: 700;
-    -fx-text-fill: #cfeaff;
+    -fx-text-fill: -text-secondary;
+    -fx-font-size: 14px;
 }
 
 /* ===================================================
-   CONTENEDORES
-   =================================================== */
-
-.vbox,
-.hbox {
-    -fx-spacing: 12;
-}
-
-.panel {
-    -fx-background-color: linear-gradient(to bottom right,
-        rgba(25, 37, 52, 0.96),
-        rgba(15, 22, 32, 0.96));
-
-    -fx-background-radius: 22;
-    -fx-border-radius: 22;
-
-    -fx-border-color: rgba(255,255,255,0.05);
-    -fx-border-width: 1;
-
-    -fx-padding: 22;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.55), 30, 0.25, 0, 10);
-}
-
-/* Glass effect */
-.glass-panel {
-    -fx-background-color: rgba(255,255,255,0.05);
-
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-
-    -fx-border-color: rgba(255,255,255,0.08);
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.35), 20, 0.15, 0, 6);
-}
-
-/* ===================================================
-   BOTONES
+   BOTONES - Estilo Epic Games
    =================================================== */
 
 .button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #2f6ea7, #244866);
-
-    -fx-text-fill: white;
-
+    -fx-background-color: -epic-blue;
+    -fx-text-fill: white !important;
     -fx-font-size: 13px;
-    -fx-font-weight: 700;
-
-    -fx-background-radius: 14;
-    -fx-border-radius: 14;
-
-    -fx-padding: 11 22;
-
-    -fx-border-color: rgba(255,255,255,0.08);
-    -fx-border-width: 1;
-
+    -fx-font-weight: 600;
+    -fx-background-radius: 8;
+    -fx-padding: 10 20;
     -fx-cursor: hand;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.35), 15, 0.2, 0, 4);
+    -fx-border: null;
 }
 
 .button:hover {
-    -fx-background-color:
-        linear-gradient(to bottom right, #66c0f4, #4ea7e3);
-
-    -fx-text-fill: #07131f;
-
-    -fx-scale-x: 1.04;
-    -fx-scale-y: 1.04;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.45), 20, 0.3, 0, 6);
+    -fx-background-color: -epic-blue-hover;
+    -fx-effect: dropshadow(gaussian, rgba(0, 120, 212, 0.4), 10, 0.3, 0, 2);
 }
 
 .button:pressed {
-    -fx-scale-x: 0.97;
-    -fx-scale-y: 0.97;
-
-    -fx-background-color: #1d8dd1;
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
 }
 
-/* BOTONES SECUNDARIOS */
+/* ✅ ALIAS para compatibilidad con código Java */
+.btn-primary { -fx-background-color: -epic-blue; -fx-text-fill: white !important; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand; }
+.btn-primary:hover { -fx-background-color: -epic-blue-hover; -fx-effect: dropshadow(gaussian, rgba(0, 120, 212, 0.4), 10, 0.3, 0, 2); }
 
+.btn-secondary { -fx-background-color: -bg-tertiary; -fx-text-fill: -text-primary !important; -fx-border-color: -border-color; -fx-border-width: 1; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand; }
+.btn-secondary:hover { -fx-background-color: -bg-elevated; -fx-border-color: -border-hover; }
+
+.btn-success { -fx-background-color: -epic-green; -fx-text-fill: white !important; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand; }
+.btn-success:hover { -fx-background-color: #149c14; }
+
+/* Botones secundarios (original) */
 .secondary-button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #2b3440, #1d252e);
-
-    -fx-text-fill: #d6e3f0;
+    -fx-background-color: -bg-tertiary;
+    -fx-text-fill: -text-primary !important;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
 }
-
 .secondary-button:hover {
-    -fx-background-color:
-        linear-gradient(to bottom right, #384657, #283341);
+    -fx-background-color: -bg-elevated;
+    -fx-border-color: -border-hover;
 }
 
-/* SUCCESS */
-
+/* Botones de estado (original) */
 .success-button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #36c979, #23995a);
+    -fx-background-color: -epic-green;
 }
-
 .success-button:hover {
-    -fx-background-color:
-        linear-gradient(to bottom right, #52e89a, #30b46f);
+    -fx-background-color: #149c14;
 }
-
-/* DANGER */
 
 .danger-button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #ff5f6d, #d83d52);
+    -fx-background-color: -epic-red;
 }
-
 .danger-button:hover {
-    -fx-background-color:
-        linear-gradient(to bottom right, #ff7d89, #ef4f66);
-}
-
-/* LOGOUT */
-
-.logout-button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #59616b, #3d434a);
+    -fx-background-color: #e04448;
 }
 
 /* ===================================================
-   INPUTS
+   INPUTS - Clean Gaming Style
    =================================================== */
 
-.text-field,
-.password-field,
-.text-area,
-.combo-box {
-    -fx-background-color:
-        linear-gradient(to bottom, #101923, #0d141d);
-
-    -fx-text-fill: #eef6ff;
-
-    -fx-background-radius: 14;
-    -fx-border-radius: 14;
-
-    -fx-border-color: rgba(255,255,255,0.06);
-    -fx-border-width: 1.2;
-
-    -fx-padding: 12;
-
-    -fx-highlight-fill: #66c0f4;
-    -fx-highlight-text-fill: #08131f;
+.text-field, .password-field, .text-area, .combo-box {
+    -fx-background-color: -bg-tertiary;
+    -fx-text-fill: -text-primary !important;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: -text-tertiary;
 }
 
-.text-field:hover,
-.password-field:hover,
-.text-area:hover,
-.combo-box:hover {
-    -fx-border-color: rgba(102,192,244,0.30);
+.text-field:focused, .password-field:focused,
+.text-area:focused, .combo-box:focused {
+    -fx-border-color: -epic-blue;
+    -fx-background-color: -bg-elevated;
 }
 
-.text-field:focused,
-.password-field:focused,
-.text-area:focused,
-.combo-box:focused {
-    -fx-border-color: #66c0f4;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.35), 18, 0.25, 0, 0);
+.text-field:hover, .password-field:hover,
+.text-area:hover, .combo-box:hover {
+    -fx-background-color: -bg-elevated;
 }
 
-.text-input {
-    -fx-prompt-text-fill: #6f8498;
-}
-
-/* ===================================================
-   TEXT AREA / RESEÑAS
-   =================================================== */
-
-/* AQUI ESTÁ EL FIX DEL TEXTO BLANCO SOBRE FONDO BLANCO */
-
+/* TextArea */
 .text-area .content {
-    -fx-background-color: #111923;
-    -fx-background-radius: 14;
+    -fx-background-color: -bg-tertiary;
+    -fx-background-radius: 8;
 }
-
-.text-area {
-    -fx-text-fill: #e8f2ff;
-}
-
 .text-area .text {
-    -fx-fill: #e8f2ff;
+    -fx-fill: -text-primary !important;
+}
+
+/* ComboBox dropdown */
+.combo-box-popup .list-view {
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.combo-box-popup .list-cell {
+    -fx-padding: 10 16;
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-primary !important;
+}
+
+.combo-box-popup .list-cell:hover {
+    -fx-background-color: -bg-tertiary;
+}
+
+.combo-box-popup .list-cell:filled:selected {
+    -fx-background-color: -epic-blue;
+    -fx-text-fill: white !important;
 }
 
 /* ===================================================
-   TABLE VIEW
+   TABLA - Modern Grid
    =================================================== */
 
 .table-view {
-    -fx-background-color: rgba(17, 26, 37, 0.95);
-
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-
-    -fx-border-color: rgba(102,192,244,0.12);
-
-    -fx-padding: 10;
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-table-cell-border-color: transparent;
 }
 
-.table-view .column-header-background {
-    -fx-background-color:
-        linear-gradient(to right, #1b3246, #20384f);
+/* ✅ ALIAS para compatibilidad */
+.table-view-custom { -fx-background-color: transparent; -fx-background-radius: 12; -fx-border-color: -border-color; -fx-border-width: 1; -fx-border-radius: 12; -fx-table-cell-border-color: transparent; }
 
-    -fx-background-radius: 16 16 0 0;
+.table-view .column-header-background {
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 12 12 0 0;
+    -fx-border-color: -border-color;
+    -fx-border-width: 0 0 1 0;
 }
 
 .table-view .column-header {
     -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-padding: 14 16;
 }
 
 .table-view .column-header .label {
-    -fx-text-fill: #9ad7ff;
-    -fx-font-size: 13px;
-    -fx-font-weight: 800;
+    -fx-text-fill: -text-secondary !important;
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-transform: uppercase;
 }
 
 .table-row-cell {
     -fx-background-color: transparent;
-
     -fx-border-color: transparent;
-
-    -fx-background-insets: 3;
-    -fx-padding: 4;
+    -fx-padding: 4 0;
 }
 
 .table-row-cell:hover {
-    -fx-background-color: rgba(102,192,244,0.08);
-
-    -fx-background-radius: 12;
+    -fx-background-color: -bg-tertiary;
 }
 
 .table-row-cell:selected {
-    -fx-background-color:
-        linear-gradient(to right, #2b5374, #37668d);
-
-    -fx-background-radius: 12;
+    -fx-background-color: -bg-elevated;
+    -fx-border-left-color: -epic-blue;
+    -fx-border-left-width: 3;
 }
 
 .table-cell {
-    -fx-text-fill: #dcecff;
-
+    -fx-text-fill: -text-primary !important;
+    -fx-font-size: 13px;
     -fx-alignment: CENTER-LEFT;
+    -fx-padding: 12 16;
 }
 
 /* ===================================================
-   LIST VIEW
+   LIST VIEW - Sidebar Style
    =================================================== */
 
 .list-view {
-    -fx-background-color: rgba(17, 26, 37, 0.95);
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-    -fx-border-color: rgba(102,192,244,0.12);
-    -fx-padding: 6;
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 8;
 }
 
 .list-view .list-cell {
     -fx-background-color: transparent;
-    -fx-text-fill: #dcecff;
-    -fx-padding: 12;
-    -fx-background-radius: 12;
-}
-
-.list-view .list-cell:empty {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent;
+    -fx-text-fill: -text-secondary !important;
+    -fx-font-size: 14px;
+    -fx-padding: 10 16;
+    -fx-background-radius: 8;
 }
 
 .list-view .list-cell:hover {
-    -fx-background-color: rgba(102,192,244,0.10);
+    -fx-background-color: -bg-tertiary;
+    -fx-text-fill: -text-primary !important;
 }
 
 .list-view .list-cell:selected {
-    -fx-background-color: linear-gradient(to right, #2f5d88, #4177a7);
-    -fx-text-fill: #ffffff;
+    -fx-background-color: -epic-blue;
+    -fx-text-fill: white !important;
 }
 
 /* ===================================================
-   SCROLLBAR
-   =================================================== */
-
-.combo-box-popup .list-view .scroll-bar:vertical {
-    -fx-background-color: transparent;
-    -fx-pref-width: 8; /* Más fino */
-}
-
-.combo-box-popup .list-view .scroll-bar .thumb {
-    -fx-background-color: rgba(102,192,244,0.4); /* Color azul suave */
-    -fx-background-radius: 10;
-}
-
-.combo-box-popup .list-view .scroll-bar .thumb:hover {
-    -fx-background-color: #66c0f4;
-}
-
-.combo-box-popup .list-view .scroll-bar .increment-button,
-.combo-box-popup .list-view .scroll-bar .decrement-button {
-    -fx-background-color: transparent;
-    -fx-shape: "";
-}
-
-/* ===================================================
-   COMBOBOX
-   =================================================== */
-
-.combo-box-popup .list-view {
-    -fx-background-color: #121c28;
-    -fx-background-radius: 12;
-    -fx-border-color: rgba(102,192,244,0.3);
-    -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 15, 0, 0, 8);
-}
-
-.combo-box-popup .list-cell {
-    -fx-padding: 10 15;
-    -fx-background-color: transparent;
-    -fx-text-fill: #dcecff;
-}
-
-.combo-box-popup .list-cell:empty {
-    -fx-opacity: 0;
-    -fx-max-height: 0;
-    -fx-padding: 0;
-}
-
-.combo-box-popup .list-cell:hover {
-    -fx-background-color: rgba(102,192,244,0.15);
-    -fx-text-fill: white;
-}
-
-/* ===================================================
-   DIALOGS
-   =================================================== */
-
-.dialog-pane {
-    -fx-background-color:
-        linear-gradient(to bottom right, #16202d, #0f1722);
-
-    -fx-background-radius: 22;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.55), 30, 0.25, 0, 10);
-}
-
-.dialog-pane .label {
-    -fx-text-fill: #e8f2ff;
-}
-
-.dialog-pane .button {
-    -fx-background-color:
-        linear-gradient(to bottom right, #2f6ea7, #244866);
-}
-
-/* ===================================================
-   TOOLTIP
-   =================================================== */
-
-.tooltip {
-    -fx-background-color: rgba(28,40,56,0.96);
-
-    -fx-text-fill: white;
-
-    -fx-background-radius: 10;
-
-    -fx-padding: 10 14;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.4), 12, 0.2, 0, 3);
-}
-
-/* ===================================================
-   SEPARADORES
-   =================================================== */
-
-.separator .line {
-    -fx-border-color: rgba(102,192,244,0.15);
-    -fx-border-width: 1;
-}
-
-/* ===================================================
-   CARDS / GAME ITEM
+   GAME CARDS - Epic Style
    =================================================== */
 
 .game-card {
-    -fx-background-color:
-        linear-gradient(to bottom right,
-            rgba(31,45,62,0.95),
-            rgba(18,27,38,0.95));
-
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-
-    -fx-border-color: rgba(255,255,255,0.05);
-
-    -fx-padding: 18;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.45), 22, 0.2, 0, 8);
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 10, 0.2, 0, 4);
 }
 
 .game-card:hover {
-    -fx-border-color: rgba(102,192,244,0.35);
-
-    -fx-scale-x: 1.01;
-    -fx-scale-y: 1.01;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.18), 26, 0.25, 0, 10);
+    -fx-background-color: -bg-elevated;
+    -fx-border-color: -epic-blue;
+    -fx-effect: dropshadow(gaussian, rgba(0, 120, 212, 0.3), 20, 0.4, 0, 8);
+    -fx-translate-y: -2;
 }
 
 /* ===================================================
-   ULTRA PREMIUM ALERT
+   SCROLLBARS - Minimal
    =================================================== */
 
-.custom-alert {
-    -fx-background-color:
-        linear-gradient(to bottom right,
-            rgba(20,30,42,0.98),
-            rgba(10,15,24,0.98));
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8;
+    -fx-pref-height: 8;
+}
 
-    -fx-background-radius: 30;
-    -fx-border-radius: 30;
+.scroll-bar .thumb {
+    -fx-background-color: -bg-tertiary;
+    -fx-background-radius: 4;
+}
 
-    -fx-border-color:
-        linear-gradient(to bottom right,
-            rgba(102,192,244,0.45),
-            rgba(255,255,255,0.05));
+.scroll-bar .thumb:hover {
+    -fx-background-color: -bg-elevated;
+}
 
-    -fx-border-width: 1.8;
-
-    -fx-padding: 26;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(0,0,0,0.75), 45, 0.30, 0, 14),
-        dropshadow(gaussian, rgba(102,192,244,0.18), 25, 0.20, 0, 0);
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-shape: " ";
 }
 
 /* ===================================================
-   HEADER
+   SEPARATORS
    =================================================== */
 
-.custom-alert:header .header-panel {
-    -fx-background-color:
-        linear-gradient(to right,
-            rgba(102,192,244,0.10),
-            rgba(102,192,244,0.02));
-
-    -fx-background-radius: 20 20 0 0;
-
-    -fx-padding: 20 20 12 20;
-}
-
-.custom-alert:header .header-panel .label {
-    -fx-text-fill: linear-gradient(to right, #66c0f4, #c7f0ff);
-
-    -fx-font-size: 24px;
-    -fx-font-weight: 900;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.35), 10, 0.2, 0, 0);
-}
-
-/* ===================================================
-   TEXTO
-   =================================================== */
-
-.custom-alert .content.label {
-    -fx-text-fill: #eef7ff;
-
-    -fx-font-size: 15px;
-    -fx-font-weight: 600;
-
-    -fx-line-spacing: 3px;
-
-    -fx-padding: 18 8 10 8;
-}
-
-/* ===================================================
-   BOTONES
-   =================================================== */
-
-.custom-alert .button {
-    -fx-background-color:
-        linear-gradient(to bottom right,
-            #66c0f4,
-            #317fbb);
-
-    -fx-text-fill: #08131f;
-
-    -fx-font-size: 14px;
-    -fx-font-weight: 900;
-
-    -fx-letter-spacing: 0.5px;
-
-    -fx-background-radius: 16;
-    -fx-border-radius: 16;
-
-    -fx-padding: 12 30;
-
-    -fx-border-color: rgba(255,255,255,0.15);
+.separator .line {
+    -fx-border-color: -border-color;
     -fx-border-width: 1;
+}
 
+/* ===================================================
+   DIALOGS - Epic Style
+   =================================================== */
+
+.dialog-pane {
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 0;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: -bg-tertiary;
+    -fx-padding: 20 24 12 24;
+    -fx-background-radius: 12 12 0 0;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: -text-primary !important;
+    -fx-font-size: 18px;
+    -fx-font-weight: 600;
+}
+
+.dialog-pane .content.label {
+    -fx-text-fill: -text-secondary !important;
+    -fx-font-size: 14px;
+    -fx-padding: 20 24;
+}
+
+.dialog-pane .button-bar {
+    -fx-padding: 0 24 20 24;
+    -fx-spacing: 12;
+}
+
+/* ===================================================
+   ALERTS
+   =================================================== */
+
+.alert {
+    -fx-background-color: -bg-secondary;
+}
+
+.alert .header-panel {
+    -fx-background-color: -bg-tertiary;
+}
+
+.alert .header-panel .label {
+    -fx-text-fill: -text-primary !important;
+}
+
+.alert .content.label {
+    -fx-text-fill: -text-secondary !important;
+}
+
+/* ✅ ALIAS para compatibilidad */
+.custom-alert { -fx-background-color: -bg-secondary; -fx-background-radius: 12; -fx-border-color: -border-color; -fx-border-width: 1; -fx-border-radius: 12; }
+.custom-alert .header-panel { -fx-background-color: -bg-tertiary; }
+.custom-alert .header-panel .label { -fx-text-fill: -text-primary !important; }
+.custom-alert .content.label { -fx-text-fill: -text-secondary !important; }
+.custom-alert .button { -fx-background-color: -epic-blue; -fx-text-fill: white !important; -fx-font-weight: 600; }
+.custom-alert .button:hover { -fx-background-color: -epic-blue-hover; }
+
+/* ===================================================
+   TOOLTIPS
+   =================================================== */
+
+.tooltip {
+    -fx-background-color: -bg-elevated;
+    -fx-text-fill: -text-primary !important;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 10, 0.3, 0, 4);
+}
+
+/* ===================================================
+   GRID PANE - Game Library
+   =================================================== */
+
+.grid-pane {
+    -fx-hgap: 20;
+    -fx-vgap: 20;
+}
+
+/* ===================================================
+   BADGES / TAGS
+   =================================================== */
+
+.badge {
+    -fx-background-color: -bg-tertiary;
+    -fx-background-radius: 6;
+    -fx-padding: 4 10;
+    -fx-text-fill: -text-secondary !important;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+}
+
+.badge.success {
+    -fx-background-color: -epic-green;
+    -fx-text-fill: white !important;
+}
+.badge.warning {
+    -fx-background-color: -epic-yellow;
+    -fx-text-fill: #000 !important;
+}
+.badge.danger {
+    -fx-background-color: -epic-red;
+    -fx-text-fill: white !important;
+}
+.badge.info {
+    -fx-background-color: -epic-blue;
+    -fx-text-fill: white !important;
+}
+
+/* ===================================================
+   UTILITIES
+   =================================================== */
+
+.panel {
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 12;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 20;
+}
+
+.glass-panel {
+    -fx-background-color: rgba(26, 26, 26, 0.8);
+    -fx-background-radius: 12;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+}
+
+/* Hover effects */
+.hoverable:hover {
     -fx-cursor: hand;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.35), 18, 0.25, 0, 6);
 }
 
-.custom-alert .button:hover {
-    -fx-background-color:
-        linear-gradient(to bottom right,
-            #8fe0ff,
-            #58b8ff);
-
-    -fx-scale-x: 1.06;
-    -fx-scale-y: 1.06;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.55), 24, 0.35, 0, 8);
-}
-
-.custom-alert .button:pressed {
-    -fx-scale-x: 0.96;
-    -fx-scale-y: 0.96;
-
-    -fx-background-color: #1f8fd4;
+/* Disabled state */
+.button:disabled, .text-field:disabled, .combo-box:disabled,
+.btn-primary:disabled, .btn-secondary:disabled, .btn-success:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
 }
 
 /* ===================================================
-   ICONO
+   ✅ NUEVAS UTILIDADES PARA STAEM
    =================================================== */
 
-.custom-alert:header *.graphic {
-    -fx-padding: 12;
-
-    -fx-effect:
-        dropshadow(gaussian, rgba(102,192,244,0.45), 12, 0.2, 0, 0);
+/* Login container */
+.login-container {
+    -fx-background-color: -bg-secondary;
+    -fx-background-radius: 16;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0.3, 0, 10);
 }
 
-/* ===================================================
-   PANEL INTERIOR
-   =================================================== */
-
-.custom-alert .button-bar {
-    -fx-padding: 15 0 5 0;
+/* Fade animation helper */
+.fade-in {
+    -fx-opacity: 0;
 }
 
-/* ===================================================
-   EFECTO GLASS
-   =================================================== */
+/* Status indicators */
+.status-online { -fx-text-fill: #107c10; -fx-font-weight: 600; }
+.status-offline { -fx-text-fill: -text-tertiary; }
+.status-playing { -fx-text-fill: -epic-blue; -fx-font-weight: 600; }
 
-.custom-alert > *.content {
-    -fx-background-color:
-        rgba(255,255,255,0.02);
+/* Rating stars */
+.rating-stars {
+    -fx-text-fill: #ffd700;
+    -fx-font-size: 18px;
+    -fx-letter-spacing: 2px;
+}
 
-    -fx-background-radius: 18;
+/* Empty state */
+.empty-state {
+    -fx-text-fill: -text-tertiary;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER;
+    -fx-padding: 40 20;
+}
 
-    -fx-padding: 12;
+/* Loading indicator text */
+.loading-text {
+    -fx-text-fill: -text-tertiary;
+    -fx-font-style: italic;
+    -fx-alignment: CENTER;
 }

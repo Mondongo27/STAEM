@@ -11,6 +11,7 @@ module com.example.app {
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
     requires java.sql;
+    requires java.datatransfer;
 
     opens com.example.app to javafx.fxml;
     exports com.example.app;
