@@ -9,300 +9,211 @@ import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.concurrent.Task;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
+import java.util.Map;
+
+/**
+ * Perfil público de un usuario: muestra sus estadísticas, biblioteca y permite
+ * seguirle / editar el propio perfil.
+ */
 public class PublicProfileView {
 
-    private static final Logger LOGGER = Logger.getLogger(PublicProfileView.class.getName());
-    private BibliotecaService service = new BibliotecaService();
-
     public Stage start(String targetUsername, int loggedInUserId) {
+
         Stage stage = new Stage();
+        BibliotecaService service = new BibliotecaService();
 
-        // ===== ROOT =====
-        VBox root = new VBox(20);
-        root.setPadding(new Insets(25));
-        root.getStyleClass().add("panel");
-        root.setStyle("-fx-background-color: #1a1a1a;");
+        Map<String, Object> stats = service.obtenerEstadisticas(targetUsername);
+        int    totalJuegos = (int)    stats.getOrDefault("total", 0);
+        double mediaNotas  = (double) stats.getOrDefault("media", 0.0);
 
-        // ===== HEADER CON CARGA ASÍNCRONA =====
-        HBox header = new HBox(15);
-        header.setAlignment(Pos.CENTER_LEFT);
+        String miNombre  = service.obtenerNombrePorId(loggedInUserId);
+        boolean esPropioP = miNombre != null && miNombre.equalsIgnoreCase(targetUsername);
+        boolean yaAmigo   = !esPropioP && service.esAmigo(loggedInUserId, targetUsername);
 
-        Button btnBack = new Button("← Volver");
-        btnBack.getStyleClass().add("btn-secondary");
-        btnBack.setOnAction(e -> stage.close());
+        // ─── ROOT ───
+        VBox root = new VBox(0);
+        root.setStyle("-fx-background-color: #121212;");
 
-        Label lblUser = new Label("👤 " + targetUsername);
-        lblUser.getStyleClass().add("title");
-        lblUser.setStyle("-fx-text-fill: white;");
+        // ─── HEADER / BANNER ───
+        VBox headerBox = new VBox(12);
+        headerBox.setPadding(new Insets(32, 30, 28, 30));
+        headerBox.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #1e2a3a, #121212); " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 1 0;"
+        );
 
-        Button btnSeguir = new Button("➕ Seguir");
-        btnSeguir.getStyleClass().add("btn-primary");
+        // Avatar
+        StackPane avatar = new StackPane();
+        avatar.setPrefSize(72, 72);
+        avatar.setMaxSize(72, 72);
+        avatar.setStyle(
+                "-fx-background-color: #0078d4; -fx-background-radius: 36;"
+        );
+        Label avatarLabel = new Label(targetUsername.substring(0, 1).toUpperCase());
+        avatarLabel.setStyle("-fx-font-size: 30px; -fx-font-weight: 800; -fx-text-fill: white;");
+        avatar.getChildren().add(avatarLabel);
 
-        header.getChildren().addAll(btnBack, new Region(), lblUser, btnSeguir);
-        HBox.setHgrow(new Region(), Priority.ALWAYS);
+        Label lblUser = new Label(targetUsername);
+        lblUser.setStyle("-fx-font-size: 26px; -fx-font-weight: 800; -fx-text-fill: white;");
 
-        // ===== LABEL DE ESTADÍSTICAS (con placeholder de carga) =====
-        Label lblStats = new Label("🔄 Cargando estadísticas...");
-        lblStats.setStyle("-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 14px;");
-        lblStats.getStyleClass().add("subtitle");
+        Label lblStats = new Label(String.format(
+                "🎮 %d juegos   •   ⭐ %.1f media", totalJuegos, mediaNotas
+        ));
+        lblStats.setStyle("-fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.55);");
 
-        // ===== TABLA DE JUEGOS =====
+        // Botones de acción
+        HBox actions = new HBox(10);
+        actions.setAlignment(Pos.CENTER_LEFT);
+
+        if (esPropioP) {
+            Button btnEditar = createPrimaryButton("⚙ Editar Perfil");
+            btnEditar.setOnAction(e -> new PerfilView().start(loggedInUserId));
+            actions.getChildren().add(btnEditar);
+        } else {
+            Button btnSeguir = new Button(yaAmigo ? "✅ Siguiendo" : "➕ Seguir");
+            btnSeguir.setStyle(yaAmigo
+                    ? "-fx-background-color: rgba(16,124,16,0.2); -fx-text-fill: #6fcf97; -fx-font-weight: 700; -fx-background-radius: 8; -fx-padding: 9 20; -fx-cursor: hand;"
+                    : "-fx-background-color: #0078d4; -fx-text-fill: white; -fx-font-weight: 700; -fx-background-radius: 8; -fx-padding: 9 20; -fx-cursor: hand;"
+            );
+            btnSeguir.setDisable(yaAmigo);
+
+            btnSeguir.setOnAction(e -> {
+                boolean ok = service.agregarAmigo(loggedInUserId, targetUsername);
+                // Actualizamos UI independientemente del resultado (ya podría estar registrado)
+                btnSeguir.setText("✅ Siguiendo");
+                btnSeguir.setStyle(
+                        "-fx-background-color: rgba(16,124,16,0.2); -fx-text-fill: #6fcf97; " +
+                                "-fx-font-weight: 700; -fx-background-radius: 8; -fx-padding: 9 20; -fx-cursor: hand;"
+                );
+                btnSeguir.setDisable(true);
+                if (!ok) System.out.println("[PublicProfileView] Nota: ya era amigo o error en BD.");
+            });
+
+            actions.getChildren().add(btnSeguir);
+        }
+
+        HBox userRow = new HBox(16);
+        userRow.setAlignment(Pos.CENTER_LEFT);
+        userRow.getChildren().addAll(avatar, new VBox(4, lblUser, lblStats));
+
+        headerBox.getChildren().addAll(userRow, actions);
+
+        // ─── STATS CARDS ───
+        HBox statsRow = new HBox(16);
+        statsRow.setPadding(new Insets(20, 30, 20, 30));
+        statsRow.setStyle(
+                "-fx-background-color: #1a1a1a; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 1 0;"
+        );
+        statsRow.getChildren().addAll(
+                createStatCard("🎮 Total juegos", String.valueOf(totalJuegos), "#0078d4"),
+                createStatCard("⭐ Media",         String.format("%.1f / 10", mediaNotas), "#ffb900")
+        );
+
+        // ─── TABLA DE JUEGOS ───
+        VBox tableSection = new VBox(12);
+        tableSection.setPadding(new Insets(24, 30, 30, 30));
+
+        Label tableTitle = new Label(esPropioP ? "Mi Biblioteca" : "Biblioteca de " + targetUsername);
+        tableTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: white;");
+
         TableView<Videojuego> tabla = new TableView<>();
-        tabla.getStyleClass().add("table-view-custom");
+        tabla.setStyle(
+                "-fx-background-color: #1a1a1a; -fx-border-color: rgba(255,255,255,0.07); " +
+                        "-fx-border-radius: 10; -fx-background-radius: 10;"
+        );
         tabla.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-        tabla.setPlaceholder(new Label("🎮 Este usuario aún no tiene juegos públicos"));
+        tabla.setPlaceholder(new Label("Esta biblioteca está vacía."));
 
-        // Columnas con renderizado mejorado
-        TableColumn<Videojuego, String> colTit = new TableColumn<>("🎮 Juego");
+        TableColumn<Videojuego, String>  colTit  = new TableColumn<>("🎮 Juego");
+        TableColumn<Videojuego, String>  colEst  = new TableColumn<>("Estado");
+        TableColumn<Videojuego, Integer> colNot  = new TableColumn<>("⭐ Nota");
+        TableColumn<Videojuego, String>  colRes  = new TableColumn<>("📝 Reseña");
+
         colTit.setCellValueFactory(new PropertyValueFactory<>("titulo"));
-        colTit.setPrefWidth(200);
-
-        TableColumn<Videojuego, String> colEst = new TableColumn<>("Estado");
         colEst.setCellValueFactory(new PropertyValueFactory<>("estado"));
-        colEst.setPrefWidth(120);
-        colEst.setCellFactory(col -> new TableCell<>() {
-            @Override protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) { setText(null); setStyle(""); }
-                else {
-                    setText(item.toUpperCase());
-                    String color = switch (item.toLowerCase()) {
-                        case "jugando" -> "#107c10";
-                        case "jugado" -> "#0078d4";
-                        default -> "#ffb900";
-                    };
-                    setStyle(String.format("-fx-text-fill: %s; -fx-font-weight: 600;", color));
-                }
-            }
-        });
-
-        TableColumn<Videojuego, Integer> colNot = new TableColumn<>("⭐ Nota");
         colNot.setCellValueFactory(new PropertyValueFactory<>("valoracion"));
-        colNot.setPrefWidth(80);
+        colRes.setCellValueFactory(new PropertyValueFactory<>("resena"));
+
         colNot.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(Integer item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null || item == 0) { setText("-"); setStyle(""); }
-                else {
-                    setText(item + "/5");
-                    setStyle("-fx-text-fill: #ffd700; -fx-font-weight: 600;");
-                }
+                setText(empty || item == null || item == 0 ? "—" : item + "/10");
             }
         });
 
-        TableColumn<Videojuego, String> colRes = new TableColumn<>("📝 Reseña");
-        colRes.setCellValueFactory(new PropertyValueFactory<>("resena"));
-        colRes.setPrefWidth(250);
-        colRes.setCellFactory(col -> new TableCell<>() {
+        colEst.setCellFactory(col -> new TableCell<>() {
             @Override protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if (empty || item == null || item.trim().isEmpty()) { setText("Sin reseña"); setStyle("-fx-text-fill: rgba(255,255,255,0.4);"); }
-                else { setText(item.length() > 40 ? item.substring(0, 40) + "..." : item); setStyle("-fx-text-fill: rgba(255,255,255,0.85);"); }
+                if (empty || item == null) { setText(null); setStyle(""); return; }
+                String color = switch (item.toLowerCase()) {
+                    case "jugando" -> "#107c10";
+                    case "jugado"  -> "#0078d4";
+                    default        -> "#ffb900";
+                };
+                setText(item.toUpperCase());
+                setStyle(String.format("-fx-text-fill: %s; -fx-font-weight: 700;", color));
             }
         });
 
         tabla.getColumns().addAll(colTit, colEst, colNot, colRes);
+        tabla.setItems(service.obtenerJuegosDeOtroUsuario(targetUsername));
+        VBox.setVgrow(tabla, Priority.ALWAYS);
 
-        // ===== LAYOUT PRINCIPAL =====
-        root.getChildren().addAll(header, lblStats, new Separator(), tabla);
+        // Doble clic → ver ficha del juego
+        tabla.setOnMouseClicked(ev -> {
+            if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2) {
+                Videojuego sel = tabla.getSelectionModel().getSelectedItem();
+                if (sel != null) new GameProfileView().start(sel.getTitulo());
+            }
+        });
 
-        // ===== SCENE =====
-        Scene scene = new Scene(root, 850, 600);
-        cargarCSS(scene);
+        tableSection.getChildren().addAll(tableTitle, tabla);
+        VBox.setVgrow(tableSection, Priority.ALWAYS);
 
-        stage.setTitle("👤 Perfil de " + targetUsername + " | STAEM");
-        cargarIcono(stage);
+        root.getChildren().addAll(headerBox, statsRow, tableSection);
+        VBox.setVgrow(tableSection, Priority.ALWAYS);
+
+        // ─── SCENE ───
+        Scene scene = new Scene(root, 900, 650);
+        try {
+            var css = getClass().getResource("/style.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {}
+
+        stage.setMinWidth(700);
+        stage.setMinHeight(500);
         stage.setScene(scene);
-        stage.setMinWidth(750);
-        stage.setMinHeight(550);
+        stage.setTitle("STAEM — Perfil de " + targetUsername);
+        try { stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png"))); }
+        catch (Exception ignored) {}
         stage.show();
-
-        // ===== CARGA ASÍNCRONA DE DATOS =====
-        cargarDatosPerfil(targetUsername, loggedInUserId, lblStats, btnSeguir, tabla, stage);
 
         return stage;
     }
 
-    // ===== MÉTODO PRINCIPAL DE CARGA ASÍNCRONA =====
-    private void cargarDatosPerfil(String targetUsername, int loggedInUserId,
-                                   Label lblStats, Button btnSeguir,
-                                   TableView<Videojuego> tabla, Stage stage) {
-
-        Task<PerfilData> task = new Task<>() {
-            @Override protected PerfilData call() {
-                Map<String, Object> stats = service.obtenerEstadisticas(targetUsername);
-                String miNombre = service.obtenerNombrePorId(loggedInUserId);
-                boolean yaEsAmigo = service.esAmigo(loggedInUserId, targetUsername);
-                var juegos = service.obtenerJuegosDeOtroUsuario(targetUsername);
-                return new PerfilData(stats, miNombre, yaEsAmigo, juegos);
-            }
-        };
-
-        task.setOnSucceeded(e -> {
-            PerfilData data = task.getValue();
-
-            // Actualizar estadísticas
-            lblStats.setText(String.format(
-                    "🎮 Juegos: %s   |   ⭐ Media: %.1f",
-                    data.stats.getOrDefault("total", 0),
-                    data.stats.getOrDefault("media", 0.0)
-            ));
-            lblStats.setStyle("-fx-text-fill: rgba(255,255,255,0.85); -fx-font-size: 14px;");
-
-            // Configurar botón de seguir
-            configurarBotonSeguir(btnSeguir, targetUsername, loggedInUserId, data.miNombre, data.yaEsAmigo, stage);
-
-            // Cargar juegos en tabla
-            tabla.setItems(data.juegos);
-
-            // Mensaje si no hay juegos
-            if (data.juegos.isEmpty()) {
-                lblStats.setText(lblStats.getText() + "   |   📭 Sin juegos públicos");
-            }
-        });
-
-        task.setOnFailed(evt -> {
-            lblStats.setText("⚠️ Error al cargar datos");
-            lblStats.setStyle("-fx-text-fill: #ff4c4c;");
-            LOGGER.log(Level.SEVERE, "Error al cargar perfil de: " + targetUsername, task.getException());
-        });
-
-        new Thread(task).start();
+    private Button createPrimaryButton(String text) {
+        Button btn = new Button(text);
+        btn.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 9 20; -fx-cursor: hand;"
+        );
+        return btn;
     }
 
-    // ===== CONFIGURACIÓN DEL BOTÓN SEGUIR =====
-    private void configurarBotonSeguir(Button btnSeguir, String targetUsername, int loggedInUserId,
-                                       String miNombre, boolean yaEsAmigo, Stage stage) {
-
-        // Si es mi propio perfil
-        if (miNombre != null && targetUsername.equalsIgnoreCase(miNombre)) {
-            btnSeguir.setVisible(false);
-
-            Button btnEditar = new Button("⚙ Editar Perfil");
-            btnEditar.getStyleClass().add("btn-secondary");
-            btnEditar.setOnAction(e -> {
-                stage.close();
-                new PerfilView().start(loggedInUserId);
-            });
-            ((HBox) btnSeguir.getParent()).getChildren().add(btnEditar);
-            return;
-        }
-
-        // Si ya es amigo
-        if (yaEsAmigo) {
-            btnSeguir.setDisable(true);
-            btnSeguir.setText("✅ Siguiendo");
-            btnSeguir.getStyleClass().removeAll("btn-primary");
-            btnSeguir.getStyleClass().add("btn-success");
-            return;
-        }
-
-        // Acción de seguir
-        btnSeguir.setOnAction(e -> {
-            btnSeguir.setDisable(true);
-            btnSeguir.setText("🔄 Procesando...");
-
-            Task<Boolean> followTask = new Task<>() {
-                @Override protected Boolean call() {
-                    return service.agregarAmigo(loggedInUserId, targetUsername);
-                }
-            };
-
-            followTask.setOnSucceeded(ev -> {
-                if (followTask.getValue()) {
-                    btnSeguir.setText("✅ Siguiendo");
-                    btnSeguir.getStyleClass().removeAll("btn-primary");
-                    btnSeguir.getStyleClass().add("btn-success");
-                    mostrarAlert(stage, "¡Amigo añadido!", "Ahora ves la actividad de " + targetUsername);
-                } else {
-                    btnSeguir.setDisable(false);
-                    btnSeguir.setText("➕ Seguir");
-                    mostrarAlert(stage, "⚠️ No se pudo añadir", "Verifica que el usuario existe");
-                }
-            });
-
-            followTask.setOnFailed(ev -> {
-                btnSeguir.setDisable(false);
-                btnSeguir.setText("➕ Seguir");
-                LOGGER.log(Level.WARNING, "Error al seguir usuario", followTask.getException());
-            });
-
-            new Thread(followTask).start();
-        });
-    }
-
-    // ===== DOBLE-CLICK EN TABLA =====
-    private void configurarDobleClick(TableView<Videojuego> tabla, Stage stage) {
-        tabla.setOnMouseClicked(event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
-                Videojuego sel = tabla.getSelectionModel().getSelectedItem();
-                if (sel != null) {
-                    try {
-                        // Usar DetalleJuegoView en lugar de GameProfileView (que puede no existir)
-                        new DetalleJuegoView().start(sel.getTitulo(), 0); // 0 = sin usuario logueado para vista pública
-                    } catch (Exception ex) {
-                        LOGGER.log(Level.WARNING, "Error al abrir detalles", ex);
-                        mostrarAlert(stage, "⚠️ Detalles no disponibles", "La vista de detalles no está implementada aún");
-                    }
-                }
-            }
-        });
-    }
-
-    // ===== CLASE AUXILIAR PARA DATOS DEL PERFIL =====
-    private static class PerfilData {
-        final Map<String, Object> stats;
-        final String miNombre;
-        final boolean yaEsAmigo;
-        final javafx.collections.ObservableList<Videojuego> juegos;
-
-        PerfilData(Map<String, Object> stats, String miNombre, boolean yaEsAmigo,
-                   javafx.collections.ObservableList<Videojuego> juegos) {
-            this.stats = stats;
-            this.miNombre = miNombre;
-            this.yaEsAmigo = yaEsAmigo;
-            this.juegos = juegos;
-        }
-    }
-
-    // ===== UTILITIES =====
-    private void mostrarAlert(Stage parent, String titulo, String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.initOwner(parent);
-        alert.setTitle(titulo);
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        estilizarAlert(alert);
-        alert.showAndWait();
-    }
-
-    private void estilizarAlert(Alert alert) {
-        alert.getDialogPane().setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
-        try {
-            alert.getDialogPane().getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
-        } catch (Exception e) {}
-        alert.getDialogPane().getStyleClass().add("custom-alert");
-    }
-
-    private void cargarCSS(Scene scene) {
-        try {
-            String css = getClass().getResource("/style.css").toExternalForm();
-            if (css != null) scene.getStylesheets().add(css);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar style.css", e);
-        }
-    }
-
-    private void cargarIcono(Stage stage) {
-        try {
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar el icono", e);
-        }
+    private VBox createStatCard(String label, String value, String color) {
+        VBox card = new VBox(4);
+        card.setPadding(new Insets(14, 22, 14, 22));
+        card.setStyle(String.format(
+                "-fx-background-color: rgba(255,255,255,0.04); -fx-background-radius: 10; " +
+                        "-fx-border-color: %s; -fx-border-width: 0 0 0 3;", color
+        ));
+        Label lbl = new Label(label);
+        lbl.setStyle("-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.5); -fx-font-weight: 600;");
+        Label val = new Label(value);
+        val.setStyle(String.format("-fx-font-size: 22px; -fx-font-weight: 800; -fx-text-fill: %s;", color));
+        card.getChildren().addAll(lbl, val);
+        return card;
     }
 }

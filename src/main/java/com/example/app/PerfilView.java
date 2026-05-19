@@ -5,270 +5,201 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.concurrent.Task;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
+import java.util.Map;
+
+/**
+ * Ventana para editar los datos del perfil del usuario (nombre, email, contraseña).
+ * Los campos vienen prerellenados con los valores actuales.
+ * Dejar un campo sin cambios → el valor se conserva.
+ * Dejar la contraseña en blanco → la contraseña no cambia.
+ */
 public class PerfilView {
 
-    private static final Logger LOGGER = Logger.getLogger(PerfilView.class.getName());
-    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@(.+)$");
-    private BibliotecaService service = new BibliotecaService();
-
     public void start(int usuarioId) {
+
         Stage stage = new Stage();
+        BibliotecaService service = new BibliotecaService();
 
-        // ===== ROOT =====
-        VBox root = new VBox(22);
-        root.setPadding(new Insets(30));
-        root.setAlignment(Pos.CENTER);
-        root.getStyleClass().add("panel");
-        root.setStyle("-fx-background-color: #1a1a1a;");
-
-        // ===== HEADER =====
-        Label titulo = new Label("⚙ EDITAR PERFIL");
-        titulo.getStyleClass().add("title");
-        titulo.setStyle("-fx-text-fill: white;");
-
-        Label subtitulo = new Label("Personaliza tu cuenta de STAEM");
-        subtitulo.setStyle("-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 14px;");
-
-        // ===== INPUTS CON VALIDACIÓN =====
-        TextField txtUser = new TextField();
-        txtUser.setPromptText("Nuevo nombre de usuario");
-        txtUser.getStyleClass().add("text-field");
-        txtUser.setPrefHeight(40);
-        // En lugar de: txtUser.setMaxLength(20);
-// Usa un listener que trunca el texto:
-        txtUser.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && newVal.length() > 20) {
-                txtUser.setText(newVal.substring(0, 20));
-                txtUser.positionCaret(20); // Mantiene el cursor al final
-            }
-        });
-
-        // Validación en tiempo real para usuario
-        txtUser.textProperty().addListener((o, ov, nv) -> {
-            if (nv != null && nv.length() > 0 && nv.length() < 3) {
-                txtUser.setStyle("-fx-border-color: #ffb900; -fx-border-width: 2px;");
-            } else {
-                txtUser.setStyle("");
-            }
-        });
-
-        TextField txtEmail = new TextField();
-        txtEmail.setPromptText("Nuevo correo electrónico");
-        txtEmail.getStyleClass().add("text-field");
-        txtEmail.setPrefHeight(40);
-
-        // Validación de email en tiempo real
-        txtEmail.textProperty().addListener((o, ov, nv) -> {
-            if (nv != null && !nv.isEmpty() && !EMAIL_PATTERN.matcher(nv).matches()) {
-                txtEmail.setStyle("-fx-border-color: #ffb900; -fx-border-width: 2px;");
-            } else {
-                txtEmail.setStyle("");
-            }
-        });
-
-        PasswordField txtPass = new PasswordField();
-        txtPass.setPromptText("Nueva contraseña (opcional, mín. 6 caracteres)");
-        txtPass.getStyleClass().add("password-field");
-        txtPass.setPrefHeight(40);
-
-        // Indicador de fortaleza de contraseña
-        Label lblPassStrength = new Label();
-        lblPassStrength.setStyle("-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.5);");
-        txtPass.textProperty().addListener((o, ov, nv) -> {
-            if (nv != null && !nv.isEmpty()) {
-                if (nv.length() < 6) {
-                    lblPassStrength.setText("⚠️ Muy débil (mín. 6 caracteres)");
-                    lblPassStrength.setStyle("-fx-text-fill: #ff4c4c;");
-                    txtPass.setStyle("-fx-border-color: #ff4c4c; -fx-border-width: 2px;");
-                } else if (nv.length() < 10) {
-                    lblPassStrength.setText("✓ Aceptable");
-                    lblPassStrength.setStyle("-fx-text-fill: #ffb900;");
-                    txtPass.setStyle("");
-                } else {
-                    lblPassStrength.setText("✓ Fuerte");
-                    lblPassStrength.setStyle("-fx-text-fill: #107c10;");
-                    txtPass.setStyle("");
-                }
-            } else {
-                lblPassStrength.setText("");
-                txtPass.setStyle("");
-            }
-        });
-
-        // ===== BOTONES =====
-        Button btnGuardar = new Button("💾 Guardar Cambios");
-        btnGuardar.getStyleClass().add("btn-primary");
-        btnGuardar.setMaxWidth(Double.MAX_VALUE);
-        btnGuardar.setPrefHeight(45);
-        btnGuardar.setDefaultButton(true); // Enter ejecuta guardar
-
-        Button btnCancelar = new Button("✕ Cancelar");
-        btnCancelar.getStyleClass().add("btn-secondary");
-        btnCancelar.setMaxWidth(Double.MAX_VALUE);
-        btnCancelar.setPrefHeight(40);
-        btnCancelar.setOnAction(e -> stage.close());
-
-        // ===== LABEL DE MENSAJES =====
-        Label lblMensaje = new Label();
-        lblMensaje.setWrapText(true);
-        lblMensaje.setAlignment(Pos.CENTER);
-        lblMensaje.setMaxWidth(Double.MAX_VALUE);
-        lblMensaje.setStyle("-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 13px;");
-
-        // ===== CARGAR DATOS ACTUALES =====
+        // Cargar datos actuales
         Map<String, String> datos = service.obtenerDatosCompletosUsuario(usuarioId);
-        String usuarioActual = datos.getOrDefault("username", "");
-        String emailActual = datos.getOrDefault("email", "");
+        String usernameActual = datos.getOrDefault("username", "");
+        String emailActual    = datos.getOrDefault("email",    "");
 
-        // Mostrar valores actuales como placeholder + label informativo
-        txtUser.setPromptText("Actual: " + usuarioActual);
-        txtEmail.setPromptText("Actual: " + emailActual);
+        // ─── ROOT ───
+        VBox root = new VBox(0);
+        root.setStyle("-fx-background-color: #121212;");
 
-        Label lblInfo = new Label("💡 Deja vacío para mantener el valor actual");
-        lblInfo.setStyle("-fx-text-fill: rgba(255,255,255,0.5); -fx-font-size: 12px; -fx-font-style: italic;");
+        // ─── HEADER ───
+        VBox headerBox = new VBox(6);
+        headerBox.setPadding(new Insets(28, 30, 24, 30));
+        headerBox.setStyle(
+                "-fx-background-color: #1a1a1a; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 1 0;"
+        );
 
-        // ===== EVENTO GUARDAR =====
-        btnGuardar.setOnAction(e -> guardarCambios(usuarioId, txtUser, txtEmail, txtPass, lblMensaje, stage));
+        // Avatar inicial
+        StackPane avatar = new StackPane();
+        avatar.setPrefSize(60, 60);
+        avatar.setMaxSize(60, 60);
+        avatar.setStyle("-fx-background-color: #0078d4; -fx-background-radius: 30;");
+        Label avatarLabel = new Label(usernameActual.isEmpty() ? "?" : usernameActual.substring(0, 1).toUpperCase());
+        avatarLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: white;");
+        avatar.getChildren().add(avatarLabel);
 
-        // ===== LAYOUT =====
+        Label titulo = new Label("Editar Perfil");
+        titulo.setStyle("-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: white;");
+        Label subtitulo = new Label("Los cambios se aplican inmediatamente.");
+        subtitulo.setStyle("-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.45);");
+
+        HBox userRow = new HBox(16);
+        userRow.setAlignment(Pos.CENTER_LEFT);
+        userRow.getChildren().addAll(avatar, new VBox(4, titulo, subtitulo));
+        headerBox.getChildren().add(userRow);
+
+        // ─── FORMULARIO ───
         VBox formBox = new VBox(14);
-        formBox.setMaxWidth(380);
+        formBox.setPadding(new Insets(28, 30, 30, 30));
+
+        // Usuario
+        Label lblUser = createFormLabel("Nombre de usuario");
+        TextField txtUser = createTextField();
+        txtUser.setText(usernameActual);
+        txtUser.setPromptText("Nombre de usuario");
+
+        // Email
+        Label lblEmail = createFormLabel("Correo electrónico");
+        TextField txtEmail = createTextField();
+        txtEmail.setText(emailActual);
+        txtEmail.setPromptText("Correo electrónico");
+
+        // Contraseña
+        Label lblPass = createFormLabel("Nueva contraseña");
+        Label hintPass = new Label("(Déjalo vacío para no cambiarla)");
+        hintPass.setStyle("-fx-font-size: 11px; -fx-text-fill: rgba(255,255,255,0.3);");
+        PasswordField txtPass = new PasswordField();
+        txtPass.setPromptText("Nueva contraseña");
+        txtPass.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.35); " +
+                        "-fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 10 14;"
+        );
+
+        // Mensaje de estado
+        Label lblMsg = new Label();
+        lblMsg.setWrapText(true);
+        lblMsg.setStyle("-fx-font-size: 13px;");
+
+        // Botón guardar
+        Button btnGuardar = new Button("💾 Guardar Cambios");
+        btnGuardar.setMaxWidth(Double.MAX_VALUE);
+        btnGuardar.setDefaultButton(true);
+        btnGuardar.setStyle(
+                "-fx-background-color: #0078d4; -fx-text-fill: white; " +
+                        "-fx-font-size: 14px; -fx-font-weight: 700; " +
+                        "-fx-background-radius: 8; -fx-padding: 12; -fx-cursor: hand;"
+        );
+
+        // Enter en campos navega al siguiente
+        txtUser.setOnAction(e -> txtEmail.requestFocus());
+        txtEmail.setOnAction(e -> txtPass.requestFocus());
+        txtPass.setOnAction(e -> btnGuardar.fire());
+
+        btnGuardar.setOnAction(e -> {
+            String nuevoUser  = txtUser.getText().trim();
+            String nuevoEmail = txtEmail.getText().trim();
+            String nuevaPass  = txtPass.getText().trim();
+
+            // Validaciones mínimas
+            if (nuevoUser.isEmpty()) {
+                setMsg(lblMsg, "⚠ El nombre de usuario no puede estar vacío.", "#ffb900");
+                txtUser.requestFocus();
+                return;
+            }
+            if (nuevoEmail.isEmpty() || !nuevoEmail.contains("@")) {
+                setMsg(lblMsg, "⚠ Introduce un email válido.", "#ffb900");
+                txtEmail.requestFocus();
+                return;
+            }
+            if (!nuevaPass.isEmpty() && nuevaPass.length() < 4) {
+                setMsg(lblMsg, "⚠ La contraseña debe tener al menos 4 caracteres.", "#ffb900");
+                txtPass.requestFocus();
+                return;
+            }
+
+            // null = no cambiar contraseña
+            String passParam = nuevaPass.isEmpty() ? null : nuevaPass;
+
+            btnGuardar.setDisable(true);
+            btnGuardar.setText("Guardando...");
+
+            boolean ok = service.actualizarDatosUsuario(usuarioId, nuevoUser, nuevoEmail, passParam);
+
+            if (ok) {
+                setMsg(lblMsg, "✅ Perfil actualizado correctamente.", "#6fcf97");
+                txtPass.clear();
+                // Actualizar avatar con la inicial del nuevo nombre
+                avatarLabel.setText(nuevoUser.substring(0, 1).toUpperCase());
+            } else {
+                setMsg(lblMsg, "❌ No se pudo actualizar. El nombre o email podría estar en uso.", "#ff4c4c");
+            }
+            btnGuardar.setDisable(false);
+            btnGuardar.setText("💾 Guardar Cambios");
+        });
+
         formBox.getChildren().addAll(
-                new Label("👤 Nombre de usuario"), txtUser,
-                new Label("📧 Correo electrónico"), txtEmail,
-                new Label("🔐 Nueva contraseña"), txtPass, lblPassStrength,
-                lblInfo
+                lblUser,  txtUser,
+                lblEmail, txtEmail,
+                new HBox(6, lblPass, hintPass),
+                txtPass,
+                btnGuardar,
+                lblMsg
         );
 
-        root.getChildren().addAll(
-                titulo, subtitulo, new Separator(),
-                formBox,
-                btnGuardar, btnCancelar,
-                lblMensaje
-        );
+        VBox.setVgrow(formBox, Priority.ALWAYS);
+        root.getChildren().addAll(headerBox, formBox);
 
-        // ===== SCENE =====
-        Scene scene = new Scene(root, 450, 620);
-        cargarCSS(scene);
+        // ─── SCENE ───
+        Scene scene = new Scene(root, 440, 500);
+        try {
+            var css = getClass().getResource("/style.css");
+            if (css != null) scene.getStylesheets().add(css.toExternalForm());
+        } catch (Exception ignored) {}
 
-        stage.setTitle("⚙ Editar Perfil | STAEM");
-        cargarIcono(stage);
+        stage.setMinWidth(380);
+        stage.setMinHeight(440);
         stage.setScene(scene);
+        stage.setTitle("STAEM — Editar Perfil");
         stage.setResizable(false);
+        try { stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png"))); }
+        catch (Exception ignored) {}
         stage.show();
 
-        // Foco inicial
         txtUser.requestFocus();
     }
 
-    // ===== MÉTODO DE GUARDADO ASÍNCRONO =====
-    private void guardarCambios(int usuarioId, TextField txtUser, TextField txtEmail,
-                                PasswordField txtPass, Label lblMensaje, Stage stage) {
+    // ─── Helpers ───
 
-        // Obtener valores con lógica de "vacío = mantener actual"
-        String nuevoUser = txtUser.getText().trim();
-        String nuevoEmail = txtEmail.getText().trim();
-        String nuevaPass = txtPass.getText().trim();
-
-        // Validaciones
-        if (!nuevoUser.isEmpty() && nuevoUser.length() < 3) {
-            mostrarError(lblMensaje, "El usuario debe tener al menos 3 caracteres", txtUser);
-            return;
-        }
-        if (!nuevoEmail.isEmpty() && !EMAIL_PATTERN.matcher(nuevoEmail).matches()) {
-            mostrarError(lblMensaje, "Ingresa un correo electrónico válido", txtEmail);
-            return;
-        }
-        if (!nuevaPass.isEmpty() && nuevaPass.length() < 6) {
-            mostrarError(lblMensaje, "La contraseña debe tener al menos 6 caracteres", txtPass);
-            return;
-        }
-
-        // Deshabilitar UI durante guardado
-        setSavingState(true, txtUser, txtEmail, txtPass, lblMensaje);
-        lblMensaje.setText("🔄 Guardando cambios...");
-        lblMensaje.setStyle("-fx-text-fill: rgba(255,255,255,0.7);");
-
-        // Task asíncrono
-        Task<Boolean> saveTask = new Task<>() {
-            @Override protected Boolean call() {
-                // Si está vacío, pasar null para que el service mantenga el valor actual
-                String userParam = nuevoUser.isEmpty() ? null : nuevoUser;
-                String emailParam = nuevoEmail.isEmpty() ? null : nuevoEmail;
-                String passParam = nuevaPass.isEmpty() ? null : nuevaPass;
-
-                return service.actualizarDatosUsuario(usuarioId, userParam, emailParam, passParam);
-            }
-        };
-
-        saveTask.setOnSucceeded(e -> {
-            if (saveTask.getValue()) {
-                lblMensaje.setText("✅ Perfil actualizado correctamente");
-                lblMensaje.setStyle("-fx-text-fill: #107c10; -fx-font-weight: 600;");
-
-                // Cerrar después de breve delay para que el usuario vea el mensaje
-                javafx.animation.PauseTransition wait = new javafx.animation.PauseTransition(javafx.util.Duration.millis(800));
-                wait.setOnFinished(ev -> stage.close());
-                wait.play();
-            } else {
-                mostrarError(lblMensaje, "❌ No se pudo actualizar. Verifica que el usuario/email no estén en uso", null);
-                setSavingState(false, txtUser, txtEmail, txtPass, lblMensaje);
-            }
-        });
-
-        saveTask.setOnFailed(evt -> {
-            mostrarError(lblMensaje, "⚠️ Error de conexión. Intenta de nuevo.", null);
-            LOGGER.log(Level.SEVERE, "Error al actualizar perfil", saveTask.getException());
-            setSavingState(false, txtUser, txtEmail, txtPass, lblMensaje);
-        });
-
-        new Thread(saveTask).start();
+    private Label createFormLabel(String text) {
+        Label l = new Label(text);
+        l.setStyle("-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 12px; -fx-font-weight: 600;");
+        return l;
     }
 
-    // ===== HELPERS =====
-    private void mostrarError(Label lbl, String mensaje, Control campo) {
-        lbl.setText(mensaje);
-        lbl.setStyle("-fx-text-fill: #ff4c4c; -fx-font-weight: 500;");
-        if (campo != null) {
-            campo.setStyle("-fx-border-color: #ff4c4c; -fx-border-width: 2px;");
-            campo.requestFocus();
-            // Quitar borde después de 3 segundos
-            javafx.animation.PauseTransition wait = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
-            wait.setOnFinished(e -> campo.setStyle(""));
-            wait.play();
-        }
+    private TextField createTextField() {
+        TextField tf = new TextField();
+        tf.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.35); " +
+                        "-fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 10 14;"
+        );
+        return tf;
     }
 
-    private void setSavingState(boolean saving, TextField txtUser, TextField txtEmail,
-                                PasswordField txtPass, Label lblMensaje) {
-        txtUser.setDisable(saving);
-        txtEmail.setDisable(saving);
-        txtPass.setDisable(saving);
-        lblMensaje.setDisable(saving);
-    }
-
-    private void cargarCSS(Scene scene) {
-        try {
-            String css = getClass().getResource("/style.css").toExternalForm();
-            if (css != null) scene.getStylesheets().add(css);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar style.css", e);
-        }
-    }
-
-    private void cargarIcono(Stage stage) {
-        try {
-            stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png")));
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar el icono", e);
-        }
+    private void setMsg(Label lbl, String text, String color) {
+        lbl.setText(text);
+        lbl.setStyle(String.format("-fx-text-fill: %s; -fx-font-size: 13px;", color));
     }
 }

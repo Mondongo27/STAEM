@@ -7,519 +7,563 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.animation.FadeTransition;
-import javafx.util.Duration;
 
 import java.sql.*;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
 public class BibliotecaView {
 
-    private static final Logger LOGGER = Logger.getLogger(BibliotecaView.class.getName());
-
-    // 🔹 Controles UI
-    private ComboBox<String> cbBusquedaJuego;
-    private ComboBox<String> cbEstado;
+    // ─── Componentes de formulario (panel derecho) ───
+    private ComboBox<String>  cbBusquedaJuego;
+    private ComboBox<String>  cbEstado;
     private ComboBox<Integer> cbNota;
-    private TextArea txtResena;
+    private TextArea          txtResena;
+
+    // ─── Lista de amigos ───
     private ListView<String> lvAmigos;
-    private Label gamesCountLabel;
+
+    // ─── Área principal ───
+    private Label    gamesCountLabel;
     private GridPane gamesGrid;
 
-    // 🔹 Estado interno
-    private int usuarioId;
-    private BibliotecaService service;
-    private ObservableList<Videojuego> todosLosJuegos;
+    // ─── Estado ───
+    private int                          usuarioId;
+    private BibliotecaService            service;
+    private ObservableList<Videojuego>   todosLosJuegos;
+    private Videojuego                   juegoSeleccionado;    // referencia directa en lugar de buscar por estilo
 
-    // 🔹 Filtros
+    // ─── Filtros ───
     private Button filterAll, filterPlaying, filterPlayed, filterPending;
-
-    // ✅ Mapa para vincular tarjetas ↔ objetos
-    private final Map<VBox, Videojuego> cardsMap = new HashMap<>();
-    private VBox selectedCard = null;
-
-    // ✅ Timer para debounce en búsqueda
-    private Timer searchTimer = new Timer();
+    private String  filtroActual = null;
 
     public void start(int usuarioId) {
-        this.usuarioId = usuarioId;
-        this.service = new BibliotecaService();
+        this.usuarioId      = usuarioId;
+        this.service        = new BibliotecaService();
         this.todosLosJuegos = FXCollections.observableArrayList();
 
         Stage stage = new Stage();
+
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: #121212;");
 
-        // ==================== HEADER ====================
+        // ============================================================
+        // HEADER
+        // ============================================================
         HBox header = new HBox(20);
         header.setAlignment(Pos.CENTER_LEFT);
         header.setPadding(new Insets(15, 30, 15, 30));
-        header.setStyle("-fx-background-color: #1a1a1a; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 1 0;");
+        header.setStyle(
+                "-fx-background-color: #1a1a1a; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 1 0;"
+        );
 
-        // ✅ LOGO PNG en lugar de texto
-        ImageView logoView = new ImageView();
-        try {
-            Image logoImage = new Image(getClass().getResourceAsStream("/logo.png"));
-            // ✅ Solo verificar isError(), isPlaceholder NO existe en JavaFX
-            if (logoImage != null && !logoImage.isError()) {
-                logoView.setImage(logoImage);
-                logoView.setFitHeight(32);
-                logoView.setPreserveRatio(true);
-                header.getChildren().add(logoView);
-            } else {
-                Label fallback = new Label("STAEM");
-                fallback.setStyle("-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: white;");
-                header.getChildren().add(fallback);
-            }
-        } catch (Exception e) {
-            Label fallback = new Label("STAEM");
-            fallback.setStyle("-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: white;");
-            header.getChildren().add(fallback);
-        }
+        Label logoLabel = new Label("🎮 STAEM");
+        logoLabel.setStyle("-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: white;");
 
         TextField searchField = new TextField();
-        searchField.setPromptText("🔍 Buscar juegos...");
+        searchField.setPromptText("🔍 Buscar en mi biblioteca...");
         searchField.setPrefWidth(400);
-        searchField.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 8 16;");
-
-        searchField.setOnAction(e -> {
-            String texto = searchField.getText();
-            if (texto != null && texto.length() >= 3) {
-                aplicarFiltroPorTexto(texto);
-            }
-        });
+        searchField.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; " +
+                        "-fx-border-color: transparent; -fx-padding: 8 16;"
+        );
 
         HBox userActions = new HBox(12);
         userActions.setAlignment(Pos.CENTER_RIGHT);
 
-        Button btnMiPerfil = new Button("👤 Mi Perfil");
-        btnMiPerfil.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: hand;");
-
-        Button btnLogOut = new Button("Salir");
-        btnLogOut.setStyle("-fx-background-color: rgba(255,69,58,0.15); -fx-text-fill: #ff453a; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: hand;");
+        Button btnMiPerfil = createHeaderButton("👤 Mi Perfil");
+        Button btnLogOut   = new Button("Salir");
+        btnLogOut.setStyle(
+                "-fx-background-color: rgba(255,69,58,0.15); -fx-text-fill: #ff453a; " +
+                        "-fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: hand;"
+        );
 
         userActions.getChildren().addAll(btnMiPerfil, btnLogOut);
-        header.getChildren().addAll(new Region(), searchField, userActions);
-        HBox.setHgrow(searchField, Priority.ALWAYS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        header.getChildren().addAll(logoLabel, spacer, searchField, userActions);
 
-        // ==================== MAIN CONTENT ====================
-        HBox mainContent = new HBox();
-        mainContent.setStyle("-fx-background-color: #121212;");
-
-        // ==================== SIDEBAR ====================
+        // ============================================================
+        // SIDEBAR
+        // ============================================================
         VBox sidebar = new VBox(8);
         sidebar.setPadding(new Insets(20, 0, 20, 20));
-        sidebar.setPrefWidth(260);
-        sidebar.setStyle("-fx-background-color: #1a1a1a; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 1 0 0;");
+        sidebar.setPrefWidth(240);
+        sidebar.setStyle(
+                "-fx-background-color: #1a1a1a; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 1 0 0;"
+        );
 
         Label menuLabel = new Label("MENÚ");
-        menuLabel.setStyle("-fx-text-fill: rgba(255,255,255,0.4); -fx-font-size: 11px; -fx-font-weight: 600; -fx-padding: 0 0 10 16;");
+        menuLabel.setStyle(
+                "-fx-text-fill: rgba(255,255,255,0.4); -fx-font-size: 11px; " +
+                        "-fx-font-weight: 600; -fx-padding: 0 0 6 16;"
+        );
 
-        VBox menuItems = new VBox(4);
-        Button btnLibrary = createSidebarButton("📚 Biblioteca", true);
-        Button btnFriends = createSidebarButton("👥 Amigos", false);
-        // ✅ ELIMINADO: btnSettings ("⚙️ Configuración")
-        menuItems.getChildren().addAll(btnLibrary, btnFriends);
+        Button btnLibrary  = createSidebarButton("📚 Biblioteca",    true);
+        Button btnFriends  = createSidebarButton("👥 Amigos",        false);
+        Button btnSettings = createSidebarButton("⚙️ Configuración", false);
 
-        Region separator1 = new Region();
-        separator1.setPrefHeight(20);
+        Region sep1 = new Region(); sep1.setPrefHeight(16);
 
         Label friendsLabel = new Label("AMIGOS");
-        friendsLabel.setStyle("-fx-text-fill: rgba(255,255,255,0.4); -fx-font-size: 11px; -fx-font-weight: 600; -fx-padding: 0 0 10 16;");
+        friendsLabel.setStyle(
+                "-fx-text-fill: rgba(255,255,255,0.4); -fx-font-size: 11px; " +
+                        "-fx-font-weight: 600; -fx-padding: 0 0 6 16;"
+        );
 
         lvAmigos = new ListView<>();
-        lvAmigos.setPrefHeight(200);
+        lvAmigos.setPrefHeight(220);
         lvAmigos.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         lvAmigos.setItems(cargarAmigos(usuarioId));
-        lvAmigos.setCellFactory(listView -> new ListCell<String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
+        lvAmigos.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
                     setText(null);
-                    setStyle("-fx-background-color: transparent; -fx-text-fill: white;");
+                    setStyle("-fx-background-color: transparent;");
                 } else {
                     setText("👤 " + item);
-                    setStyle("-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.85); -fx-font-size: 13px; -fx-padding: 10 16; -fx-background-radius: 8;");
+                    setStyle(
+                            "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.85); " +
+                                    "-fx-font-size: 13px; -fx-padding: 9 16; -fx-background-radius: 8;"
+                    );
                 }
             }
         });
-        lvAmigos.setOnMouseClicked(event -> {
-            if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2) {
-                String seleccionado = lvAmigos.getSelectionModel().getSelectedItem();
-                if (seleccionado != null) new PublicProfileView().start(seleccionado, usuarioId);
+        lvAmigos.setOnMouseClicked(ev -> {
+            if (ev.getButton() == MouseButton.PRIMARY && ev.getClickCount() == 2) {
+                String sel = lvAmigos.getSelectionModel().getSelectedItem();
+                if (sel != null) new PublicProfileView().start(sel, usuarioId);
             }
         });
-        sidebar.getChildren().addAll(menuLabel, menuItems, separator1, friendsLabel, lvAmigos);
 
-        // ==================== CONTENT AREA ====================
+        sidebar.getChildren().addAll(menuLabel, btnLibrary, btnFriends, btnSettings, sep1, friendsLabel, lvAmigos);
+
+        // ============================================================
+        // CONTENT AREA (centro)
+        // ============================================================
         VBox contentArea = new VBox(20);
         contentArea.setPadding(new Insets(30));
         contentArea.setStyle("-fx-background-color: #121212;");
         HBox.setHgrow(contentArea, Priority.ALWAYS);
 
-        HBox sectionHeader = new HBox(20);
+        HBox sectionHeader = new HBox(16);
         sectionHeader.setAlignment(Pos.CENTER_LEFT);
         Label titleLabel = new Label("Mi Biblioteca");
         titleLabel.setStyle("-fx-font-size: 32px; -fx-font-weight: 700; -fx-text-fill: white;");
         gamesCountLabel = new Label("0 juegos");
-        gamesCountLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: rgba(255,255,255,0.5); -fx-padding: 5 12; -fx-background-color: rgba(255,255,255,0.08); -fx-background-radius: 12;");
+        gamesCountLabel.setStyle(
+                "-fx-font-size: 13px; -fx-text-fill: rgba(255,255,255,0.5); " +
+                        "-fx-padding: 5 12; -fx-background-color: rgba(255,255,255,0.08); -fx-background-radius: 12;"
+        );
         sectionHeader.getChildren().addAll(titleLabel, gamesCountLabel);
 
+        // Filtros
         HBox filtersBar = new HBox(10);
         filtersBar.setAlignment(Pos.CENTER_LEFT);
-        filterAll = createFilterButton("Todos", true);
-        filterPlaying = createFilterButton("Jugando", false);
-        filterPlayed = createFilterButton("Jugados", false);
+        filterAll     = createFilterButton("Todos",      true);
+        filterPlaying = createFilterButton("Jugando",    false);
+        filterPlayed  = createFilterButton("Jugados",    false);
         filterPending = createFilterButton("Pendientes", false);
         filtersBar.getChildren().addAll(filterAll, filterPlaying, filterPlayed, filterPending);
 
+        // Grid de juegos
         gamesGrid = new GridPane();
         gamesGrid.setHgap(20);
         gamesGrid.setVgap(20);
-        gamesGrid.setStyle("-fx-padding: 20 0;");
+        gamesGrid.setStyle("-fx-padding: 10 0;");
+
         ScrollPane scrollPane = new ScrollPane(gamesGrid);
         scrollPane.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
         scrollPane.setFitToWidth(true);
         scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
         contentArea.getChildren().addAll(sectionHeader, filtersBar, scrollPane);
 
-        // ==================== SIDE PANEL ====================
-        VBox sidePanel = new VBox(20);
-        sidePanel.setPadding(new Insets(30, 30, 30, 0));
-        sidePanel.setPrefWidth(350);
-        sidePanel.setStyle("-fx-background-color: #1a1a1a; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 0 1;");
+        // ============================================================
+        // SIDE PANEL (derecha — gestión)
+        // ============================================================
+        VBox sidePanel = new VBox(12);
+        sidePanel.setPadding(new Insets(30, 20, 30, 20));
+        sidePanel.setPrefWidth(340);
+        sidePanel.setStyle(
+                "-fx-background-color: #1a1a1a; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 0 0 0 1;"
+        );
 
         Label panelTitle = new Label("Gestión de Juegos");
-        panelTitle.setStyle("-fx-font-size: 20px; -fx-font-weight: 700; -fx-text-fill: white;");
+        panelTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: 700; -fx-text-fill: white;");
 
         cbBusquedaJuego = new ComboBox<>();
         cbBusquedaJuego.setEditable(true);
         cbBusquedaJuego.setPromptText("Buscar videojuego...");
-        cbBusquedaJuego.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 12;");
+        cbBusquedaJuego.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(cbBusquedaJuego);
 
         cbEstado = new ComboBox<>();
         cbEstado.getItems().addAll("pendiente", "jugando", "jugado");
         cbEstado.setValue("pendiente");
-        cbEstado.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 12;");
+        cbEstado.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(cbEstado);
 
         cbNota = new ComboBox<>();
-        cbNota.getItems().addAll(0,1,2,3,4,5);
+        cbNota.getItems().addAll(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         cbNota.setValue(0);
-        cbNota.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 12;");
+        cbNota.setMaxWidth(Double.MAX_VALUE);
+        styleCombo(cbNota);
 
         txtResena = new TextArea();
-        txtResena.setPromptText("Escribe tu reseña...");
+        txtResena.setPromptText("Escribe tu reseña aquí...");
         txtResena.setPrefRowCount(5);
-        txtResena.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 12; -fx-control-inner-background: #2a2a2a;");
+        txtResena.setWrapText(true);
+        txtResena.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; " +
+                        "-fx-border-color: transparent; -fx-control-inner-background: #2a2a2a;"
+        );
 
-        Button btnAdd = createActionButton("➕ Añadir Juego", "#0078d4");
-        Button btnUpdate = createActionButton("💾 Actualizar", "#107c10");
-        Button btnDelete = createActionButton("🗑 Eliminar", "#d13438");
+        Button btnAdd       = createActionButton("➕ Añadir Juego",   "#0078d4");
+        Button btnUpdate    = createActionButton("💾 Actualizar",      "#107c10");
+        Button btnDelete    = createActionButton("🗑 Eliminar",        "#d13438");
+        Button btnAddFriend = createActionButton("👤 Añadir Amigo",   "#5a4fcf");
+
+        Label selLabel = new Label("Ningún juego seleccionado");
+        selLabel.setStyle(
+                "-fx-text-fill: rgba(255,255,255,0.35); -fx-font-size: 12px; " +
+                        "-fx-font-style: italic; -fx-padding: 4 0;"
+        );
 
         sidePanel.getChildren().addAll(
                 panelTitle,
-                createFormLabel("Juego"), cbBusquedaJuego,
-                createFormLabel("Estado"), cbEstado,
-                createFormLabel("Valoración"), cbNota,
-                createFormLabel("Reseña"), txtResena,
-                btnAdd, btnUpdate, btnDelete
+                createFormLabel("Juego"),   cbBusquedaJuego,
+                createFormLabel("Estado"),  cbEstado,
+                createFormLabel("Valoración (0–10)"), cbNota,
+                createFormLabel("Reseña"),  txtResena,
+                selLabel,
+                btnAdd, btnUpdate, btnDelete,
+                new Separator(),
+                btnAddFriend
         );
 
+        // ============================================================
+        // COMPOSICIÓN PRINCIPAL
+        // ============================================================
+        HBox mainContent = new HBox();
+        mainContent.setStyle("-fx-background-color: #121212;");
         mainContent.getChildren().addAll(sidebar, contentArea, sidePanel);
+
         root.setTop(header);
         root.setCenter(mainContent);
 
-        // ==================== SCENE ====================
+        // ============================================================
+        // SCENE
+        // ============================================================
         Scene scene = new Scene(root, 1600, 900);
-        cargarCSS(scene);
+        try { scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm()); }
+        catch (Exception ignored) {}
         stage.setScene(scene);
-        stage.setTitle("STAEM - Mi Biblioteca");
-        cargarIcono(stage);
+        stage.setTitle("STAEM — Mi Biblioteca");
+        try { stage.getIcons().add(new Image(getClass().getResourceAsStream("/logo.png"))); }
+        catch (Exception ignored) {}
         stage.setMaximized(true);
         stage.show();
 
-        // ==================== FUNCIONALIDAD ====================
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
         cargarJuegosGrid();
 
+        // ============================================================
+        // EVENTOS
+        // ============================================================
+
+        // Logout
         btnLogOut.setOnAction(e -> {
             stage.close();
-            try {
-                new LoginApp().start(new Stage());
-            } catch (Exception ex) {
-                LOGGER.log(Level.SEVERE, "Error al volver al login", ex);
-            }
+            try { new LoginApp().start(new Stage()); } catch (Exception ignored) {}
         });
 
+        // Mi perfil
         btnMiPerfil.setOnAction(e -> {
-            String miNombre = obtenerMiNombre(usuarioId);
+            String miNombre = service.obtenerNombrePorId(usuarioId);
             if (miNombre != null) new PublicProfileView().start(miNombre, usuarioId);
         });
 
-        // ✅ "Añadir Amigo" SOLO desde el botón del sidebar
-        btnFriends.setOnAction(e -> mostrarDialogoAñadirAmigo(usuarioId, lvAmigos, stage));
-
-        // FILTROS FUNCIONALES
-        filterAll.setOnAction(e -> { aplicarFiltro(null); setActiveFilter(filterAll); });
-        filterPlaying.setOnAction(e -> { aplicarFiltro("jugando"); setActiveFilter(filterPlaying); });
-        filterPlayed.setOnAction(e -> { aplicarFiltro("jugado"); setActiveFilter(filterPlayed); });
-        filterPending.setOnAction(e -> { aplicarFiltro("pendiente"); setActiveFilter(filterPending); });
-
-        // ✅ BOTÓN AÑADIR JUEGO
-        btnAdd.setOnAction(e -> {
-            String titulo = cbBusquedaJuego.getEditor().getText();
-            if (titulo == null || titulo.trim().isEmpty()) {
-                mostrarAlert("⚠️ Ingresa un nombre de juego", stage);
-                return;
-            }
-            if (service.existeEnCatalogo(titulo.trim())) {
-                if (service.añadirVideojuego(usuarioId, titulo.trim(), cbEstado.getValue())) {
-                    cargarJuegosGrid();
-                    mostrarAlert("✅ Juego añadido", stage);
-                    limpiarFormulario();
-                } else {
-                    mostrarAlert("⚠️ Ya tienes este juego en tu biblioteca", stage);
-                }
-            } else {
-                mostrarAlert("❌ El juego no existe en el catálogo global", stage);
-            }
+        // Amigos / Configuración desde sidebar
+        btnFriends.setOnAction(e -> mostrarDialogoAñadirAmigo());
+        btnAddFriend.setOnAction(e -> mostrarDialogoAñadirAmigo());
+        btnSettings.setOnAction(e -> {
+            Alert a = new Alert(Alert.AlertType.INFORMATION);
+            a.setTitle("Configuración");
+            a.setHeaderText("⚙️ Configuración");
+            a.setContentText("Esta función estará disponible próximamente.");
+            a.getDialogPane().setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
+            a.showAndWait();
         });
 
-        // ✅ BOTÓN ACTUALIZAR
-        btnUpdate.setOnAction(e -> {
-            Videojuego sel = getSelectedGame();
-            if (sel != null) {
-                if (service.actualizarVideojuego(sel.getId(), cbEstado.getValue(), cbNota.getValue(), txtResena.getText())) {
-                    sel.setEstado(cbEstado.getValue());
-                    sel.setValoracion(cbNota.getValue());
-                    sel.setResena(txtResena.getText());
-                    cargarJuegosGrid();
-                    mostrarAlert("✅ Actualizado correctamente", stage);
-                } else {
-                    mostrarAlert("❌ Error al actualizar", stage);
-                }
-            } else {
-                mostrarAlert("⚠️ Selecciona un juego de tu biblioteca para actualizar", stage);
-            }
-        });
+        // Filtros
+        filterAll.setOnAction(e     -> { filtroActual = null;        aplicarFiltro(); setActiveFilter(filterAll); });
+        filterPlaying.setOnAction(e -> { filtroActual = "jugando";   aplicarFiltro(); setActiveFilter(filterPlaying); });
+        filterPlayed.setOnAction(e  -> { filtroActual = "jugado";    aplicarFiltro(); setActiveFilter(filterPlayed); });
+        filterPending.setOnAction(e -> { filtroActual = "pendiente"; aplicarFiltro(); setActiveFilter(filterPending); });
 
-        // ✅ BOTÓN ELIMINAR
-        btnDelete.setOnAction(e -> {
-            Videojuego sel = getSelectedGame();
-            if (sel != null) {
-                Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-                confirm.setTitle("Eliminar juego");
-                confirm.setHeaderText(null);
-                confirm.setContentText("¿Estás seguro de eliminar \"" + sel.getTitulo() + "\" de tu biblioteca?");
-                estilizarDialog(confirm.getDialogPane());
-                confirm.showAndWait().ifPresent(r -> {
-                    if (r == ButtonType.OK) {
-                        if (service.eliminarVideojuego(sel.getId())) {
-                            cargarJuegosGrid();
-                            mostrarAlert("✅ Eliminado", stage);
-                            limpiarFormulario();
-                        } else {
-                            mostrarAlert("❌ Error al eliminar", stage);
-                        }
-                    }
-                });
-            } else {
-                mostrarAlert("⚠️ Selecciona un juego para eliminar", stage);
-            }
-        });
+        // Búsqueda local en la biblioteca
+        searchField.textProperty().addListener((o, ov, nv) -> filtrarPorTexto(nv));
 
-        // ✅ BÚSQUEDA CON DEBOUNCE
+        // Autocompletar catálogo global en el combo
         cbBusquedaJuego.getEditor().textProperty().addListener((o, ov, nv) -> {
-            if (nv != null && nv.length() >= 3) {
-                searchTimer.cancel();
-                searchTimer = new Timer();
-                searchTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        javafx.application.Platform.runLater(() -> {
-                            ObservableList<String> resultados = service.buscarEnCatalogoGlobal(nv);
-                            cbBusquedaJuego.setItems(resultados);
-                            if (!resultados.isEmpty() && !cbBusquedaJuego.isShowing()) {
-                                cbBusquedaJuego.show();
-                            }
-                        });
-                    }
-                }, 300);
+            if (nv != null && nv.length() > 1) {
+                cbBusquedaJuego.setItems(service.buscarEnCatalogoGlobal(nv));
+                if (!cbBusquedaJuego.isShowing()) cbBusquedaJuego.show();
             }
         });
 
-        // ✅ Selección con Enter en ComboBox
-        cbBusquedaJuego.getEditor().setOnAction(e -> {
-            String texto = cbBusquedaJuego.getEditor().getText();
-            if (texto != null && !texto.trim().isEmpty()) {
-                Videojuego encontrado = service.buscarJuegoEnLista(todosLosJuegos, texto);
-                if (encontrado != null) {
-                    for (Map.Entry<VBox, Videojuego> entry : cardsMap.entrySet()) {
-                        if (entry.getValue().getId() == encontrado.getId()) {
-                            seleccionarTarjeta(entry.getKey(), entry.getValue());
-                            break;
-                        }
-                    }
+        // Añadir juego
+        btnAdd.setOnAction(e -> {
+            String titulo = cbBusquedaJuego.getEditor().getText().trim();
+            if (titulo.isEmpty()) { mostrarAlert("⚠ Escribe o selecciona un juego."); return; }
+            if (!service.existeEnCatalogo(titulo)) { mostrarAlert("❌ El juego no existe en el catálogo de STAEM."); return; }
+            if (service.añadirVideojuego(usuarioId, titulo, cbEstado.getValue())) {
+                cargarJuegosGrid();
+                mostrarAlert("✅ Juego añadido a tu biblioteca.");
+                limpiarFormulario();
+            } else {
+                mostrarAlert("⚠ Ya tienes este juego en tu biblioteca.");
+            }
+        });
+
+        // Actualizar juego
+        btnUpdate.setOnAction(e -> {
+            if (juegoSeleccionado == null) { mostrarAlert("⚠ Selecciona un juego para actualizar."); return; }
+            if (service.actualizarVideojuego(
+                    juegoSeleccionado.getId(),
+                    cbEstado.getValue(),
+                    cbNota.getValue(),
+                    txtResena.getText())) {
+                cargarJuegosGrid();
+                mostrarAlert("✅ Juego actualizado.");
+            } else {
+                mostrarAlert("❌ No se pudo actualizar.");
+            }
+        });
+
+        // Eliminar juego
+        btnDelete.setOnAction(e -> {
+            if (juegoSeleccionado == null) { mostrarAlert("⚠ Selecciona un juego para eliminar."); return; }
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+            confirm.setTitle("Eliminar juego");
+            confirm.setHeaderText(null);
+            confirm.setContentText("¿Eliminar \"" + juegoSeleccionado.getTitulo() + "\" de tu biblioteca?");
+            confirm.getDialogPane().setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
+            confirm.showAndWait().ifPresent(r -> {
+                if (r == ButtonType.OK && service.eliminarVideojuego(juegoSeleccionado.getId())) {
+                    juegoSeleccionado = null;
+                    selLabel.setText("Ningún juego seleccionado");
+                    cargarJuegosGrid();
+                    limpiarFormulario();
+                    mostrarAlert("✅ Juego eliminado.");
                 }
-            }
+            });
         });
+
+        // Actualizar etiqueta de selección cuando cambia juegoSeleccionado
+        // (lo hacemos dentro de createGameCard)
     }
 
-    // ✅ Filtro por texto en título
-    private void aplicarFiltroPorTexto(String texto) {
+    // ─────────────────────────────────────────
+    // FILTRADO
+    // ─────────────────────────────────────────
+
+    private void aplicarFiltro() {
         gamesGrid.getChildren().clear();
         int col = 0, row = 0;
-        String filtro = texto.toLowerCase().trim();
-
-        for (Videojuego juego : todosLosJuegos) {
-            if (juego.getTitulo() != null && juego.getTitulo().toLowerCase().contains(filtro)) {
-                VBox card = createGameCard(juego);
-                gamesGrid.add(card, col, row);
+        for (Videojuego j : todosLosJuegos) {
+            if (filtroActual == null || j.getEstado().equalsIgnoreCase(filtroActual)) {
+                gamesGrid.add(createGameCard(j), col, row);
                 if (++col >= 3) { col = 0; row++; }
             }
         }
-
-        if (gamesGrid.getChildren().isEmpty()) {
-            Label empty = new Label("🔍 No se encontraron juegos con \"" + texto + "\"");
-            empty.setStyle("-fx-text-fill: rgba(255,255,255,0.5); -fx-font-size: 14px; -fx-padding: 20;");
-            gamesGrid.add(empty, 0, 0);
-        }
     }
 
-    // ✅ Filtros con animación
-    private void aplicarFiltro(String estado) {
+    private void filtrarPorTexto(String texto) {
         gamesGrid.getChildren().clear();
-        cardsMap.clear();
-        selectedCard = null;
-
         int col = 0, row = 0;
-        for (Videojuego juego : todosLosJuegos) {
-            if (estado == null || juego.getEstado().equalsIgnoreCase(estado)) {
-                VBox card = createGameCard(juego);
-                card.setOpacity(0);
-                card.setTranslateY(10);
-                gamesGrid.add(card, col, row);
-
-                FadeTransition ft = new FadeTransition(Duration.millis(150), card);
-                ft.setToValue(1);
-                ft.play();
-
+        for (Videojuego j : todosLosJuegos) {
+            boolean pasaEstado = filtroActual == null || j.getEstado().equalsIgnoreCase(filtroActual);
+            boolean pasaTexto  = texto == null || texto.isBlank() ||
+                    j.getTitulo().toLowerCase().contains(texto.toLowerCase());
+            if (pasaEstado && pasaTexto) {
+                gamesGrid.add(createGameCard(j), col, row);
                 if (++col >= 3) { col = 0; row++; }
             }
-        }
-
-        if (gamesGrid.getChildren().isEmpty()) {
-            Label empty = new Label("🎮 No hay juegos con este filtro");
-            empty.setStyle("-fx-text-fill: rgba(255,255,255,0.5); -fx-font-size: 14px; -fx-padding: 20;");
-            gamesGrid.add(empty, 0, 0);
         }
     }
 
     private void setActiveFilter(Button active) {
-        for (Button btn : Arrays.asList(filterAll, filterPlaying, filterPlayed, filterPending)) {
-            btn.setStyle(btn == active
-                    ? "-fx-background-color: #0078d4; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 16;"
-                    : "-fx-background-color: #2a2a2a; -fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 13px; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16;");
-        }
+        String estiloActivo  = "-fx-background-color: #0078d4; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 16;";
+        String estiloInactivo = "-fx-background-color: #2a2a2a; -fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 13px; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16;";
+        for (Button btn : List.of(filterAll, filterPlaying, filterPlayed, filterPending))
+            btn.setStyle(btn == active ? estiloActivo : estiloInactivo);
     }
 
     private void cargarJuegosGrid() {
-        cardsMap.clear();
-        selectedCard = null;
         todosLosJuegos.setAll(cargarDatos(usuarioId));
         gamesCountLabel.setText(todosLosJuegos.size() + " juegos");
-        aplicarFiltro(null);
-        setActiveFilter(filterAll);
+        aplicarFiltro();
+        setActiveFilter(filtroActual == null ? filterAll :
+                "jugando".equals(filtroActual)   ? filterPlaying :
+                        "jugado".equals(filtroActual)    ? filterPlayed  : filterPending);
     }
 
-    private Videojuego getSelectedGame() {
-        return (selectedCard != null) ? cardsMap.get(selectedCard) : null;
-    }
-
-    private void seleccionarTarjeta(VBox card, Videojuego juego) {
-        if (selectedCard != null) {
-            selectedCard.setStyle("-fx-background-color: #1e1e1e; -fx-background-radius: 12; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; -fx-border-radius: 12;");
-        }
-        selectedCard = card;
-        card.setStyle("-fx-background-color: #2a2a2a; -fx-background-radius: 12; -fx-border-color: rgba(0,120,212,0.8); -fx-border-width: 2; -fx-border-radius: 12;");
-
-        cbBusquedaJuego.getEditor().setText(juego.getTitulo());
-        cbEstado.setValue(juego.getEstado());
-        cbNota.setValue(juego.getValoracion());
-        txtResena.setText(juego.getResena());
-    }
+    // ─────────────────────────────────────────
+    // GAME CARD
+    // ─────────────────────────────────────────
 
     private VBox createGameCard(Videojuego juego) {
-        VBox card = new VBox(12);
-        card.setPadding(new Insets(16));
-        card.setStyle("-fx-background-color: #1e1e1e; -fx-background-radius: 12; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; -fx-border-radius: 12; -fx-cursor: hand;");
-        card.setPrefWidth(280);
+        VBox card = new VBox(10);
+        card.setPadding(new Insets(14));
+        card.setPrefWidth(270);
+        card.setStyle(cardStyle(false));
+        card.setUserData(juego); // guardamos referencia directa
 
         StackPane imageContainer = new StackPane();
-        imageContainer.setPrefHeight(160);
-        imageContainer.setStyle("-fx-background-color: linear-gradient(to bottom right, #2a2a2a, #1a1a1a); -fx-background-radius: 8;");
+        imageContainer.setPrefHeight(140);
+        imageContainer.setStyle(
+                "-fx-background-color: linear-gradient(to bottom right, #2a2a2a, #1a1a1a); " +
+                        "-fx-background-radius: 8;"
+        );
         Label icon = new Label("🎮");
-        icon.setStyle("-fx-font-size: 48px;");
+        icon.setStyle("-fx-font-size: 44px;");
         imageContainer.getChildren().add(icon);
         StackPane.setAlignment(icon, Pos.CENTER);
 
         Label title = new Label(juego.getTitulo());
-        title.setStyle("-fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: white; -fx-wrap-text: true;");
+        title.setStyle("-fx-font-size: 15px; -fx-font-weight: 600; -fx-text-fill: white;");
+        title.setWrapText(true);
 
-        Label state = new Label(juego.getEstado().toUpperCase());
         String color = switch (juego.getEstado().toLowerCase()) {
-            case "jugando" -> "#107c10";
-            case "jugado" -> "#0078d4";
-            default -> "#ffb900";
+            case "jugando"   -> "#107c10";
+            case "jugado"    -> "#0078d4";
+            default          -> "#ffb900";
         };
-        state.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; -fx-font-size: 11px; -fx-font-weight: 600; -fx-padding: 4 10; -fx-background-radius: 6;", color));
+        Label state = new Label(juego.getEstado().toUpperCase());
+        state.setStyle(String.format(
+                "-fx-background-color: %s; -fx-text-fill: white; " +
+                        "-fx-font-size: 10px; -fx-font-weight: 700; " +
+                        "-fx-padding: 3 9; -fx-background-radius: 6;", color
+        ));
 
-        card.getChildren().addAll(imageContainer, title, state);
+        // Nota si tiene valoración
+        if (juego.getValoracion() > 0) {
+            Label nota = new Label("⭐ " + juego.getValoracion() + "/10");
+            nota.setStyle("-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.6);");
+            card.getChildren().addAll(imageContainer, title, state, nota);
+        } else {
+            card.getChildren().addAll(imageContainer, title, state);
+        }
 
+        // Hover
         card.setOnMouseEntered(e -> {
-            if (card != selectedCard) {
-                card.setStyle("-fx-background-color: #252525; -fx-background-radius: 12; -fx-border-color: rgba(0,120,212,0.3); -fx-border-width: 1; -fx-border-radius: 12;");
-            }
+            if (juegoSeleccionado == null || juegoSeleccionado.getId() != juego.getId())
+                card.setStyle(cardStyle(false) + "-fx-background-color: #252525;");
         });
         card.setOnMouseExited(e -> {
-            if (card != selectedCard) {
-                card.setStyle("-fx-background-color: #1e1e1e; -fx-background-radius: 12; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; -fx-border-radius: 12;");
-            }
+            if (juegoSeleccionado == null || juegoSeleccionado.getId() != juego.getId())
+                card.setStyle(cardStyle(false));
         });
 
+        // Clic simple → seleccionar
         card.setOnMouseClicked(e -> {
-            seleccionarTarjeta(card, juego);
-            if (e.getClickCount() == 2) {
-                try {
-                    Class.forName("com.example.app.DetalleJuegoView");
-                    new DetalleJuegoView().start(juego.getTitulo(), usuarioId);
-                } catch (ClassNotFoundException ex) {
-                    mostrarAlert("⚠️ La vista de detalles aún no está disponible", null);
-                } catch (Exception ex) {
-                    LOGGER.log(Level.WARNING, "Error al abrir detalles", ex);
-                    mostrarAlert("Error al abrir detalles", null);
-                }
-            }
+            // Deseleccionar todos
+            gamesGrid.getChildren().forEach(n -> {
+                if (n instanceof VBox v) v.setStyle(cardStyle(false));
+            });
+            // Seleccionar éste
+            card.setStyle(cardStyle(true));
+            juegoSeleccionado = juego;
+            cbBusquedaJuego.getEditor().setText(juego.getTitulo());
+            cbEstado.setValue(juego.getEstado());
+            cbNota.setValue(juego.getValoracion());
+            txtResena.setText(juego.getResena() != null ? juego.getResena() : "");
+
+            // Doble clic → ficha del juego
+            if (e.getClickCount() == 2) new GameProfileView().start(juego.getTitulo());
         });
 
-        cardsMap.put(card, juego);
         return card;
     }
+
+    private String cardStyle(boolean selected) {
+        if (selected) return
+                "-fx-background-color: #2a2a2a; -fx-background-radius: 12; " +
+                        "-fx-border-color: rgba(0,120,212,0.7); -fx-border-width: 2; -fx-border-radius: 12; -fx-cursor: hand;";
+        return
+                "-fx-background-color: #1e1e1e; -fx-background-radius: 12; " +
+                        "-fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; -fx-border-radius: 12; -fx-cursor: hand;";
+    }
+
+    // ─────────────────────────────────────────
+    // DIÁLOGO AÑADIR AMIGO
+    // ─────────────────────────────────────────
+
+    private void mostrarDialogoAñadirAmigo() {
+        Dialog<String> d = new Dialog<>();
+        d.setTitle("Añadir amigo");
+        d.setHeaderText("Busca a un usuario de STAEM");
+
+        ButtonType btnAñadir = new ButtonType("Añadir", ButtonBar.ButtonData.OK_DONE);
+        d.getDialogPane().getButtonTypes().addAll(btnAñadir, ButtonType.CANCEL);
+
+        TextField tf = new TextField();
+        tf.setPromptText("Nombre de usuario exacto");
+        tf.setPrefWidth(280);
+        tf.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; " +
+                        "-fx-border-color: transparent; -fx-padding: 8 12;"
+        );
+
+        VBox content = new VBox(10, new Label("Usuario:"), tf);
+        content.setPadding(new Insets(16));
+        d.getDialogPane().setContent(content);
+        d.getDialogPane().setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
+        d.setResultConverter(b -> b == btnAñadir ? tf.getText().trim() : null);
+
+        tf.setOnAction(e -> d.getDialogPane().lookupButton(btnAñadir).fireEvent(
+                new javafx.event.ActionEvent()));
+
+        d.showAndWait().ifPresent(nombre -> {
+            if (nombre.isEmpty()) return;
+            if (service.esAmigo(usuarioId, nombre)) {
+                mostrarAlert("⚠ Ya es tu amigo.");
+            } else if (service.agregarAmigo(usuarioId, nombre)) {
+                mostrarAlert("✅ ¡Amigo añadido!");
+                lvAmigos.setItems(cargarAmigos(usuarioId));
+            } else {
+                mostrarAlert("❌ Usuario no encontrado o no válido.");
+            }
+        });
+    }
+
+    // ─────────────────────────────────────────
+    // HELPERS DE UI
+    // ─────────────────────────────────────────
 
     private Button createSidebarButton(String text, boolean active) {
         Button btn = new Button(text);
         btn.setAlignment(Pos.CENTER_LEFT);
+        btn.setMaxWidth(Double.MAX_VALUE);
         btn.setStyle(active
-                ? "-fx-background-color: rgba(0,120,212,0.15); -fx-text-fill: #0078d4; -fx-font-size: 14px; -fx-font-weight: 500; -fx-padding: 12 16; -fx-background-radius: 8; -fx-cursor: hand;"
-                : "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.85); -fx-font-size: 14px; -fx-font-weight: 500; -fx-padding: 12 16; -fx-background-radius: 8; -fx-cursor: hand;");
+                ? "-fx-background-color: rgba(0,120,212,0.15); -fx-text-fill: #0078d4; -fx-font-size: 14px; -fx-font-weight: 500; -fx-padding: 10 16; -fx-background-radius: 8; -fx-cursor: hand;"
+                : "-fx-background-color: transparent; -fx-text-fill: rgba(255,255,255,0.85); -fx-font-size: 14px; -fx-font-weight: 500; -fx-padding: 10 16; -fx-background-radius: 8; -fx-cursor: hand;"
+        );
         return btn;
     }
 
@@ -527,201 +571,89 @@ public class BibliotecaView {
         Button btn = new Button(text);
         btn.setStyle(active
                 ? "-fx-background-color: #0078d4; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 8 16;"
-                : "-fx-background-color: #2a2a2a; -fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 13px; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16;");
+                : "-fx-background-color: #2a2a2a; -fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 13px; -fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16;"
+        );
         return btn;
     }
 
     private Button createActionButton(String text, String color) {
         Button btn = new Button(text);
         btn.setMaxWidth(Double.MAX_VALUE);
-        btn.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; -fx-font-size: 13px; -fx-font-weight: 600; -fx-background-radius: 8; -fx-padding: 12; -fx-cursor: hand;", color));
+        btn.setStyle(String.format(
+                "-fx-background-color: %s; -fx-text-fill: white; " +
+                        "-fx-font-size: 13px; -fx-font-weight: 600; " +
+                        "-fx-background-radius: 8; -fx-padding: 11; -fx-cursor: hand;", color
+        ));
+        return btn;
+    }
+
+    private Button createHeaderButton(String text) {
+        Button btn = new Button(text);
+        btn.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-font-weight: 500; -fx-background-radius: 8; -fx-padding: 8 16; -fx-cursor: hand;"
+        );
         return btn;
     }
 
     private Label createFormLabel(String text) {
         Label l = new Label(text);
-        l.setStyle("-fx-text-fill: rgba(255,255,255,0.7); -fx-font-size: 12px; -fx-font-weight: 500;");
+        l.setStyle("-fx-text-fill: rgba(255,255,255,0.6); -fx-font-size: 12px; -fx-font-weight: 500;");
         return l;
     }
 
-    // ✅ CORRECCIÓN CLAVE: aceptar Window en lugar de Stage
-    private void mostrarAlert(String msg, Window parent) {
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        if (parent != null) a.initOwner(parent);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        estilizarDialog(a.getDialogPane());
-        a.showAndWait();
-    }
-
-    private void mostrarAlert(String msg, Stage parent) {
-        mostrarAlert(msg, (Window) parent);
+    private <T> void styleCombo(ComboBox<T> cb) {
+        cb.setStyle(
+                "-fx-background-color: #2a2a2a; -fx-text-fill: white; " +
+                        "-fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 6;"
+        );
     }
 
     private void mostrarAlert(String msg) {
-        mostrarAlert(msg, (Window) null);
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.getDialogPane().setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
+        a.showAndWait();
     }
 
     private void limpiarFormulario() {
         cbBusquedaJuego.getEditor().clear();
+        cbBusquedaJuego.setValue(null);
         cbEstado.setValue("pendiente");
         cbNota.setValue(0);
         txtResena.clear();
-        if (selectedCard != null) {
-            selectedCard.setStyle("-fx-background-color: #1e1e1e; -fx-background-radius: 12; -fx-border-color: rgba(255,255,255,0.05); -fx-border-width: 1; -fx-border-radius: 12;");
-            selectedCard = null;
-        }
+        juegoSeleccionado = null;
     }
 
-    private String obtenerMiNombre(int id) {
-        try (Connection c = ConexionDB.conectar();
-             PreparedStatement s = c.prepareStatement("SELECT username FROM usuarios WHERE id=?")) {
-            s.setInt(1,id);
-            ResultSet r = s.executeQuery();
-            if (r.next()) return r.getString("username");
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Error al obtener nombre", e);
-        }
-        return null;
-    }
+    // ─────────────────────────────────────────
+    // DATOS
+    // ─────────────────────────────────────────
 
     private ObservableList<Videojuego> cargarDatos(int id) {
         ObservableList<Videojuego> list = FXCollections.observableArrayList();
+        String sql = "SELECT * FROM videojuegos WHERE usuario_id = ? ORDER BY titulo ASC";
         try (Connection c = ConexionDB.conectar();
-             PreparedStatement s = c.prepareStatement("SELECT * FROM videojuegos WHERE usuario_id=?")) {
-            s.setInt(1,id);
+             PreparedStatement s = c.prepareStatement(sql)) {
+            s.setInt(1, id);
             ResultSet r = s.executeQuery();
-            while (r.next()) {
-                list.add(new Videojuego(
-                        r.getInt("id"),
-                        r.getInt("usuario_id"),
-                        r.getString("titulo"),
-                        r.getString("estado"),
-                        r.getInt("valoracion"),
-                        r.getString("resena")
-                ));
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error al cargar juegos", e);
-        }
+            while (r.next()) list.add(new Videojuego(
+                    r.getInt("id"), r.getInt("usuario_id"),
+                    r.getString("titulo"), r.getString("estado"),
+                    r.getInt("valoracion"), r.getString("resena")));
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
     }
 
     private ObservableList<String> cargarAmigos(int id) {
         ObservableList<String> list = FXCollections.observableArrayList();
+        String sql = "SELECT amigo_nombre FROM amigos WHERE usuario_id = ? ORDER BY amigo_nombre ASC";
         try (Connection c = ConexionDB.conectar();
-             PreparedStatement s = c.prepareStatement("SELECT amigo_nombre FROM amigos WHERE usuario_id=?")) {
-            s.setInt(1,id);
+             PreparedStatement s = c.prepareStatement(sql)) {
+            s.setInt(1, id);
             ResultSet r = s.executeQuery();
             while (r.next()) list.add(r.getString("amigo_nombre"));
-        } catch (SQLException e) {
-            LOGGER.log(Level.WARNING, "Error al cargar amigos", e);
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return list;
-    }
-
-    // ✅ DIÁLOGO AÑADIR AMIGO - CORREGIDO
-    private void mostrarDialogoAñadirAmigo(int uid, ListView<String> lv, Stage ownerStage) {
-        Dialog<String> d = new Dialog<>();
-        d.initOwner(ownerStage);
-        d.setTitle("Añadir Amigo");
-        d.setHeaderText("Buscar usuario por nombre exacto");
-
-        ButtonType add = new ButtonType("Añadir", ButtonBar.ButtonData.OK_DONE);
-        d.getDialogPane().getButtonTypes().addAll(add, ButtonType.CANCEL);
-        estilizarDialog(d.getDialogPane());
-
-        GridPane g = new GridPane();
-        g.setHgap(10);
-        g.setVgap(10);
-        g.setPadding(new Insets(20, 40, 10, 20));
-
-        TextField tf = new TextField();
-        tf.setPromptText("Nombre de usuario exacto");
-        tf.setPrefWidth(280);
-        tf.setStyle("-fx-background-color: #2a2a2a; -fx-text-fill: white; -fx-prompt-text-fill: rgba(255,255,255,0.4); -fx-background-radius: 8; -fx-border-color: transparent; -fx-padding: 8 12;");
-
-        tf.setOnAction(e -> {
-            Button btnOK = (Button) d.getDialogPane().lookupButton(add);
-            if (btnOK != null && !tf.getText().trim().isEmpty()) {
-                btnOK.fire();
-            }
-        });
-
-        Label hint = new Label("💡 El nombre debe coincidir exactamente");
-        hint.setStyle("-fx-text-fill: rgba(255,255,255,0.5); -fx-font-size: 11px; -fx-font-style: italic;");
-
-        g.add(new Label("Usuario:"), 0, 0);
-        g.add(tf, 1, 0);
-        g.add(hint, 1, 1);
-
-        d.getDialogPane().setContent(g);
-        d.setResultConverter(b -> b == add ? tf.getText() : null);
-
-        d.showAndWait().ifPresent(u -> {
-            if (u == null || u.trim().isEmpty()) return;
-
-            String name = u.trim();
-            String miNombre = obtenerMiNombre(uid);
-
-            if (miNombre != null && name.equalsIgnoreCase(miNombre)) {
-                mostrarAlert("⚠️ No puedes añadirte a ti mismo", ownerStage);
-                return;
-            }
-
-            if (service.esAmigo(uid, name)) {
-                mostrarAlert("⚠️ Ya es tu amigo", ownerStage);
-            } else if (service.existeUsuario(name)) {
-                if (service.agregarAmigo(uid, name)) {
-                    mostrarAlert("✅ ¡Añadido!", ownerStage);
-                    lv.setItems(cargarAmigos(uid));
-                } else {
-                    mostrarAlert("⚠️ No se pudo añadir. Intenta de nuevo.", ownerStage);
-                }
-            } else {
-                mostrarAlert("❌ Usuario \"" + name + "\" no encontrado", ownerStage);
-            }
-        });
-    }
-
-    // ✅ Helpers para CSS y recursos
-    private void cargarCSS(Scene scene) {
-        if (scene == null) return;
-        try {
-            String css = getClass().getResource("/style.css").toExternalForm();
-            if (css != null) scene.getStylesheets().add(css);
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar style.css", e);
-        }
-    }
-
-    private void cargarIcono(Stage stage) {
-        try {
-            Image icon = new Image(getClass().getResourceAsStream("/logo.png"));
-            // ✅ Solo verificar isError(), isPlaceholder NO existe
-            if (icon != null && !icon.isError()) {
-                stage.getIcons().add(icon);
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "No se pudo cargar el icono", e);
-        }
-    }
-
-    // ✅ CORREGIDO: Loop compatible con Java 8+ (sin .toList())
-    private void estilizarDialog(DialogPane pane) {
-        pane.setStyle("-fx-background-color: #1a1a1a; -fx-text-fill: white;");
-        try {
-            String css = getClass().getResource("/style.css").toExternalForm();
-            if (css != null) pane.getStylesheets().add(css);
-        } catch (Exception e) {}
-        pane.getStyleClass().add("custom-alert");
-
-        // ✅ Loop tradicional compatible con Java 8+
-        for (ButtonType type : pane.getButtonTypes()) {
-            Button button = (Button) pane.lookupButton(type);
-            if (button != null) {
-                button.setStyle("-fx-background-color: #0078d4; -fx-text-fill: white; -fx-font-weight: 600;");
-            }
-        }
     }
 }
