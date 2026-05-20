@@ -16,7 +16,7 @@ public class Videojuego {
     private int usuarioId;
     private String titulo;
     private String estado;        // Valores: "pendiente", "jugando", "jugado"
-    private int valoracion;       // Rango: 0-5 (0 = sin valorar)
+    private int valoracion;       // Rango: 0-10 (0 = sin valorar)
     private String resena;        // Texto opcional del usuario
 
     // 🔹 Constructor vacío (OBLIGATORIO para JavaFX PropertyValueFactory)
@@ -66,7 +66,7 @@ public class Videojuego {
     }
 
     // ========================================
-    // 🔹 SETTERS (escritura de propiedades) ← ¡ESTOS ERAN LOS QUE FALTABAN!
+    // 🔹 SETTERS (escritura de propiedades)
     // ========================================
 
     public void setId(int id) {
@@ -94,14 +94,15 @@ public class Videojuego {
     }
 
     /**
-     * Establece la valoración del juego (0-5).
-     * @param valoracion Número entre 0 y 5. Valores fuera de rango se ajustan automáticamente.
+     * Establece la valoración del juego (0-10).
+     * FIX: el límite superior era 5 cuando el sistema usa escala 0-10.
+     * @param valoracion Número entre 0 y 10. Valores fuera de rango se ajustan automáticamente.
      */
     public void setValoracion(int valoracion) {
         if (valoracion < 0) {
             this.valoracion = 0;
-        } else if (valoracion > 5) {
-            this.valoracion = 5;
+        } else if (valoracion > 10) {
+            this.valoracion = 10;
         } else {
             this.valoracion = valoracion;
         }
@@ -120,7 +121,7 @@ public class Videojuego {
      */
     @Override
     public String toString() {
-        return String.format("Videojuego{id=%d, titulo='%s', estado='%s', valoración=%d/5}",
+        return String.format("Videojuego{id=%d, titulo='%s', estado='%s', valoración=%d/10}",
                 id, titulo, estado, valoracion);
     }
 
@@ -175,11 +176,14 @@ public class Videojuego {
     }
 
     /**
-     * Obtiene una representación visual de la valoración con estrellas.
-     * @return Ej: "⭐⭐⭐⭐☆" para valoración 4
+     * Obtiene una representación visual de la valoración con estrellas (escala 0-10).
+     * Se muestran 5 estrellas donde cada estrella equivale a 2 puntos.
+     * @return Ej: "★★★★☆" para valoración 8
      */
     public String getValoracionConEstrellas() {
         if (valoracion <= 0) return "☆".repeat(5);
-        return "★".repeat(valoracion) + "☆".repeat(5 - valoracion);
+        int estrellaLlenas = (int) Math.round(valoracion / 2.0);
+        estrellaLlenas = Math.min(estrellaLlenas, 5);
+        return "★".repeat(estrellaLlenas) + "☆".repeat(5 - estrellaLlenas);
     }
 }

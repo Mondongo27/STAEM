@@ -33,7 +33,13 @@ public class BibliotecaView {
     private int                          usuarioId;
     private BibliotecaService            service;
     private ObservableList<Videojuego>   todosLosJuegos;
-    private Videojuego                   juegoSeleccionado;    // referencia directa en lugar de buscar por estilo
+    private Videojuego                   juegoSeleccionado;
+
+    // ─── FIX: selLabel como campo para poder actualizarlo desde createGameCard ───
+    private Label selLabel;
+
+    // ─── FIX: flag para evitar que el listener del combo abra el dropdown al seleccionar card ───
+    private boolean actualizandoCombo = false;
 
     // ─── Filtros ───
     private Button filterAll, filterPlaying, filterPlayed, filterPending;
@@ -234,7 +240,8 @@ public class BibliotecaView {
         Button btnDelete    = createActionButton("🗑 Eliminar",        "#d13438");
         Button btnAddFriend = createActionButton("👤 Añadir Amigo",   "#5a4fcf");
 
-        Label selLabel = new Label("Ningún juego seleccionado");
+        // FIX: selLabel es ahora campo de instancia
+        selLabel = new Label("Ningún juego seleccionado");
         selLabel.setStyle(
                 "-fx-text-fill: rgba(255,255,255,0.35); -fx-font-size: 12px; " +
                         "-fx-font-style: italic; -fx-padding: 4 0;"
@@ -318,7 +325,9 @@ public class BibliotecaView {
         searchField.textProperty().addListener((o, ov, nv) -> filtrarPorTexto(nv));
 
         // Autocompletar catálogo global en el combo
+        // FIX: solo actúa si el cambio lo hizo el usuario, no nosotros desde el código
         cbBusquedaJuego.getEditor().textProperty().addListener((o, ov, nv) -> {
+            if (actualizandoCombo) return;
             if (nv != null && nv.length() > 1) {
                 cbBusquedaJuego.setItems(service.buscarEnCatalogoGlobal(nv));
                 if (!cbBusquedaJuego.isShowing()) cbBusquedaJuego.show();
@@ -342,11 +351,16 @@ public class BibliotecaView {
         // Actualizar juego
         btnUpdate.setOnAction(e -> {
             if (juegoSeleccionado == null) { mostrarAlert("⚠ Selecciona un juego para actualizar."); return; }
-            if (service.actualizarVideojuego(
+            boolean ok = service.actualizarVideojuego(
                     juegoSeleccionado.getId(),
                     cbEstado.getValue(),
                     cbNota.getValue(),
-                    txtResena.getText())) {
+                    txtResena.getText());
+            if (ok) {
+                // FIX: limpiar selección ANTES de recargar el grid para que las
+                // nuevas cards no queden bloqueadas por juegoSeleccionado obsoleto
+                juegoSeleccionado = null;
+                limpiarFormulario();
                 cargarJuegosGrid();
                 mostrarAlert("✅ Juego actualizado.");
             } else {
@@ -365,16 +379,12 @@ public class BibliotecaView {
             confirm.showAndWait().ifPresent(r -> {
                 if (r == ButtonType.OK && service.eliminarVideojuego(juegoSeleccionado.getId())) {
                     juegoSeleccionado = null;
-                    selLabel.setText("Ningún juego seleccionado");
                     cargarJuegosGrid();
                     limpiarFormulario();
                     mostrarAlert("✅ Juego eliminado.");
                 }
             });
         });
-
-        // Actualizar etiqueta de selección cuando cambia juegoSeleccionado
-        // (lo hacemos dentro de createGameCard)
     }
 
     // ─────────────────────────────────────────
@@ -431,7 +441,7 @@ public class BibliotecaView {
         card.setPadding(new Insets(14));
         card.setPrefWidth(270);
         card.setStyle(cardStyle(false));
-        card.setUserData(juego); // guardamos referencia directa
+        card.setUserData(juego);
 
         StackPane imageContainer = new StackPane();
         imageContainer.setPrefHeight(140);
@@ -460,7 +470,6 @@ public class BibliotecaView {
                         "-fx-padding: 3 9; -fx-background-radius: 6;", color
         ));
 
-        // Nota si tiene valoración
         if (juego.getValoracion() > 0) {
             Label nota = new Label("⭐ " + juego.getValoracion() + "/10");
             nota.setStyle("-fx-font-size: 12px; -fx-text-fill: rgba(255,255,255,0.6);");
@@ -469,7 +478,7 @@ public class BibliotecaView {
             card.getChildren().addAll(imageContainer, title, state);
         }
 
-        // Hover
+        // Hover — solo si esta card no está seleccionada actualmente
         card.setOnMouseEntered(e -> {
             if (juegoSeleccionado == null || juegoSeleccionado.getId() != juego.getId())
                 card.setStyle(cardStyle(false) + "-fx-background-color: #252525;");
@@ -479,21 +488,29 @@ public class BibliotecaView {
                 card.setStyle(cardStyle(false));
         });
 
-        // Clic simple → seleccionar
+        // Clic simple → seleccionar; doble clic → ficha del juego
         card.setOnMouseClicked(e -> {
             // Deseleccionar todos
             gamesGrid.getChildren().forEach(n -> {
                 if (n instanceof VBox v) v.setStyle(cardStyle(false));
             });
-            // Seleccionar éste
+            // Seleccionar ésta
             card.setStyle(cardStyle(true));
             juegoSeleccionado = juego;
+
+            // FIX: bloquear el listener del combo para que no abra el dropdown de búsqueda
+            actualizandoCombo = true;
             cbBusquedaJuego.getEditor().setText(juego.getTitulo());
+            actualizandoCombo = false;
+
             cbEstado.setValue(juego.getEstado());
             cbNota.setValue(juego.getValoracion());
             txtResena.setText(juego.getResena() != null ? juego.getResena() : "");
 
-            // Doble clic → ficha del juego
+            // FIX: actualizar la etiqueta de selección (antes nunca se actualizaba)
+            selLabel.setText("Seleccionado: " + juego.getTitulo());
+            selLabel.setStyle("-fx-text-fill: #0078d4; -fx-font-size: 12px; -fx-font-weight: 600; -fx-padding: 4 0;");
+
             if (e.getClickCount() == 2) new GameProfileView().start(juego.getTitulo());
         });
 
@@ -618,12 +635,19 @@ public class BibliotecaView {
     }
 
     private void limpiarFormulario() {
+        actualizandoCombo = true;
         cbBusquedaJuego.getEditor().clear();
         cbBusquedaJuego.setValue(null);
+        actualizandoCombo = false;
         cbEstado.setValue("pendiente");
         cbNota.setValue(0);
         txtResena.clear();
         juegoSeleccionado = null;
+        selLabel.setText("Ningún juego seleccionado");
+        selLabel.setStyle(
+                "-fx-text-fill: rgba(255,255,255,0.35); -fx-font-size: 12px; " +
+                        "-fx-font-style: italic; -fx-padding: 4 0;"
+        );
     }
 
     // ─────────────────────────────────────────

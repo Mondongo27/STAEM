@@ -44,7 +44,6 @@ public class BibliotecaService {
     /** Actualiza estado, nota y reseña de un juego por su id. */
     public boolean actualizarVideojuego(int id, String nuevoEstado, int nuevaNota, String nuevaResena) {
         if (nuevoEstado == null) return false;
-        // Validar rango de nota
         int nota = Math.max(0, Math.min(10, nuevaNota));
         String sql = "UPDATE videojuegos SET estado = ?, valoracion = ?, resena = ? WHERE id = ?";
         try (Connection conn = ConexionDB.conectar();
@@ -158,12 +157,22 @@ public class BibliotecaService {
     }
 
     /**
-     * Calcula la nota global de un juego combinando notas de usuarios (40%),
-     * nota de prensa simulada (40%) y popularidad (20%).
+     * Calcula la nota global de un juego y recoge las reseñas de la comunidad.
+     *
+     * FIX: notaUsuarios estaba en escala 0-10 pero la fórmula la usaba como si fuera 0-5,
+     * produciendo notas globales superiores a 5. Ahora se normaliza a 0-5 antes de combinar.
+     * FIX: las reseñas ahora incluyen el nombre del usuario que las escribió.
      */
     public Map<String, Object> obtenerDetallesGlobalesJuego(String titulo) {
         Map<String, Object> detalles = new HashMap<>();
-        String sql = "SELECT valoracion, resena FROM videojuegos WHERE titulo = ?";
+
+        // FIX: JOIN con usuarios para obtener el username del autor de cada reseña
+        String sql = """
+                SELECT v.valoracion, v.resena, u.username
+                FROM videojuegos v
+                JOIN usuarios u ON v.usuario_id = u.id
+                WHERE v.titulo = ?
+                """;
 
         double sumaNotas = 0;
         int contador = 0;
@@ -171,25 +180,40 @@ public class BibliotecaService {
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, titulo);
+            stmt.setString(1, titulo != null ? titulo.trim() : "");
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
                 int nota = rs.getInt("valoracion");
                 if (nota > 0) { sumaNotas += nota; contador++; }
-                String res = rs.getString("resena");
-                if (res != null && !res.isBlank()) reseñas.add(res);
+                String res      = rs.getString("resena");
+                String username = rs.getString("username");
+                // FIX: incluir el nombre del autor para que la reseña sea identificable
+                if (res != null && !res.isBlank()) {
+                    reseñas.add(username + ": " + res.trim());
+                }
             }
         } catch (SQLException e) {
             System.err.println("[BibliotecaService] Error obtenerDetallesGlobalesJuego: " + e.getMessage());
         }
 
-        double notaUsuarios = contador > 0 ? sumaNotas / contador : 0;
-        double notaGlobal   = (notaUsuarios * 0.4) + (4.5 * 0.4) + (5.0 * 0.2);
+        // Nota media de usuarios en escala 0-10
+        double notaUsuarios = contador > 0 ? (double) sumaNotas / contador : 0.0;
 
-        detalles.put("notaGlobal",    Math.round(notaGlobal * 10.0) / 10.0);
-        detalles.put("notaUsuarios",  Math.round(notaUsuarios * 10.0) / 10.0);
-        detalles.put("numVotos",      contador);
-        detalles.put("resenas",       reseñas);
+        double notaGlobal;
+        if (contador == 0) {
+            notaGlobal = 0.0;
+        } else {
+            // FIX: normalizar notaUsuarios a escala 0-5 antes de combinar con los
+            // pesos de prensa (4.5/5) y popularidad (5/5), así el resultado es 0-5.
+            double notaUsuarios05 = notaUsuarios / 2.0;
+            notaGlobal = (notaUsuarios05 * 0.4) + (4.5 * 0.4) + (5.0 * 0.2);
+        }
+
+        detalles.put("notaGlobal",   Math.round(notaGlobal   * 10.0) / 10.0);
+        detalles.put("notaUsuarios", Math.round(notaUsuarios * 10.0) / 10.0);
+        detalles.put("numVotos",     contador);
+        detalles.put("resenas",      reseñas);
+
         return detalles;
     }
 
@@ -220,10 +244,8 @@ public class BibliotecaService {
      */
     public boolean agregarAmigo(int usuarioId, String nombreAmigo) {
         if (nombreAmigo == null || nombreAmigo.isBlank()) return false;
-        // No permitir añadirse a uno mismo
         String miNombre = obtenerNombrePorId(usuarioId);
         if (miNombre != null && miNombre.equalsIgnoreCase(nombreAmigo.trim())) return false;
-        // El usuario debe existir
         if (!existeUsuario(nombreAmigo.trim())) return false;
 
         String sql = "INSERT OR IGNORE INTO amigos (usuario_id, amigo_nombre) VALUES (?, ?)";
@@ -277,14 +299,12 @@ public class BibliotecaService {
      */
     public boolean actualizarDatosUsuario(int id, String nuevoNombre, String nuevoEmail, String nuevaPass) {
         try (Connection conn = ConexionDB.conectar()) {
-
-            // Obtener valores actuales
             Map<String, String> actuales = obtenerDatosCompletosUsuario(id);
             if (actuales.isEmpty()) return false;
 
-            String nombre = (nuevoNombre  != null && !nuevoNombre.isBlank())  ? nuevoNombre.trim()  : actuales.get("username");
-            String email  = (nuevoEmail   != null && !nuevoEmail.isBlank())   ? nuevoEmail.trim()   : actuales.get("email");
-            String pass   = (nuevaPass    != null && !nuevaPass.isBlank())    ? nuevaPass.trim()    : actuales.get("password");
+            String nombre = (nuevoNombre != null && !nuevoNombre.isBlank()) ? nuevoNombre.trim() : actuales.get("username");
+            String email  = (nuevoEmail  != null && !nuevoEmail.isBlank())  ? nuevoEmail.trim()  : actuales.get("email");
+            String pass   = (nuevaPass   != null && !nuevaPass.isBlank())   ? nuevaPass.trim()   : actuales.get("password");
 
             String sql = "UPDATE usuarios SET username = ?, email = ?, password = ? WHERE id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
