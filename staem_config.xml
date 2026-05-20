@@ -3,7 +3,7 @@
   <dontWrapJar>false</dontWrapJar>
   <headerType>gui</headerType>
   <jar>C:\Users\Álvaro B\Documents\GitHub\STAEM\out\artifacts\STAEM_jar\STAEM.jar</jar>
-  <outfile>C:\Users\Álvaro B\Desktop\STAEM-v1.exe</outfile>
+  <outfile>C:\Users\Álvaro B\Desktop\STAEM-LTS-1.0.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
